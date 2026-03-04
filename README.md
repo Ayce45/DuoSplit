@@ -16,16 +16,21 @@ DuoSplit est une Progressive Web App minimaliste pour partager les dépenses ent
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/setup.svg" alt="Configuration" width="200">
-  &nbsp;&nbsp;
-  <img src="screenshots/dashboard.svg" alt="Tableau de bord" width="200">
-  &nbsp;&nbsp;
-  <img src="screenshots/add-expense.svg" alt="Ajouter une dépense" width="200">
-  &nbsp;&nbsp;
-  <img src="screenshots/sync.svg" alt="Synchronisation" width="200">
+  <img src="screenshots/setup.jpg" alt="Configuration" width="180">
+  &nbsp;
+  <img src="screenshots/dashboard.jpg" alt="Tableau de bord" width="180">
+  &nbsp;
+  <img src="screenshots/add-expense.jpg" alt="Ajouter une dépense" width="180">
 </p>
 <p align="center">
-  <em>Configuration · Tableau de bord · Nouvelle dépense · Synchronisation</em>
+  <img src="screenshots/sync.jpg" alt="Synchronisation" width="180">
+  &nbsp;
+  <img src="screenshots/history.jpg" alt="Historique" width="180">
+  &nbsp;
+  <img src="screenshots/settings.jpg" alt="Paramètres" width="180">
+</p>
+<p align="center">
+  <em>Configuration · Tableau de bord · Nouvelle dépense · Synchronisation · Historique · Paramètres</em>
 </p>
 
 ## Fonctionnalites
