@@ -41,7 +41,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 .payer-btn.off{border:2px solid var(--bd);background:transparent;color:var(--ts)}
 .exp-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
 .exp-row .actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.exp-row .actions button{background:none;border:none;cursor:pointer;padding:4px;display:flex}
+.exp-row .actions button{background:none;border:none;cursor:pointer;padding:6px;display:flex;color:var(--ts);border-radius:8px;transition:all .15s}
+.exp-row .actions button:hover{color:var(--t);background:var(--acs)}
+.exp-row .actions button[data-del]:hover{color:var(--no);background:rgba(248,113,113,.12)}
 .sync-choice{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 .sync-opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:all .15s;text-align:left}
 .sync-opt:hover,.sync-opt:active{border-color:var(--ac);background:var(--acs)}
