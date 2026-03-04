@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DuoSplit">
+<title>DuoSplit</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6bf0'/><text x='50' y='68' text-anchor='middle' font-size='55' font-weight='800' fill='white'>÷</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6bf0'/><text x='50' y='68' text-anchor='middle' font-size='55' font-weight='800' fill='white'>÷</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0a0e;--sf:#141419;--bd:#262632;--ac:#7c6bf0;--acl:#b0a4ff;--acs:rgba(124,107,240,.13);--ok:#2dd4a0;--no:#f87171;--t:#ebebf0;--ts:#8585a0;--tm:#50506a}
+html,body{height:100%;background:var(--bg);color:var(--t);font-family:'DM Sans',system-ui,sans-serif;overflow-x:hidden}
+input,button,select{font-family:inherit}
+input:focus{outline:none;border-color:var(--ac)!important}
+input[type=range]{height:4px;accent-color:var(--ac)}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
+.app{max-width:460px;margin:0 auto;min-height:100vh;position:relative}
+.card{background:var(--sf);border-radius:14px;border:1px solid var(--bd);padding:16px;margin-bottom:10px}
+.inp{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:13px 15px;color:var(--t);font-size:15px;width:100%}
+.lbl{font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:block}
+.btn-p{background:var(--ac);color:#fff;border:none;border-radius:11px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.btn-g{background:transparent;color:var(--ts);border:1px solid var(--bd);border-radius:11px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer}
+.btn-p:disabled{opacity:.35}
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:100;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:tIn .3s}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px}
+.row{display:flex;align-items:center}
+.gap-8{gap:8px}.gap-10{gap:10px}
+@keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media(display-mode:standalone){body{padding-top:env(safe-area-inset-top)}}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+
+<script>
+// ─── Storage ───────────────────────────────────────────────────
+const KEY='duosplit';
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}};
+const save=d=>localStorage.setItem(KEY,JSON.stringify(d));
+
+// ─── State ─────────────────────────────────────────────────────
+let state={names:['',''],ratio:[50,50],expenses:[],settlements:[],view:'setup',
+  editId:null,fLabel:'',fAmt:'',fDate:today(),fPayer:0,
+  confirmSettle:false,confirmDel:null,toast:null,expandedS:null};
+
+const stored=load();
+if(stored){
+  state.names=stored.n||['',''];
+  state.ratio=stored.r||[50,50];
+  state.expenses=stored.e||[];
+  state.settlements=stored.s||[];
+  if(state.names[0]&&state.names[1])state.view='main';
+}
+
+function today(){return new Date().toISOString().slice(0,10)}
+function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n)}
+function fmtD(d){return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}
+
+// ─── Persist ───────────────────────────────────────────────────
+let saveT;
+function persist(){clearTimeout(saveT);saveT=setTimeout(()=>save({n:state.names,r:state.ratio,e:state.expenses,s:state.settlements}),200)}
+
+// ─── Balance calc ──────────────────────────────────────────────
+function calcBalance(){
+  const lastS=state.settlements.length>0?state.settlements[state.settlements.length-1].d:null;
+  const u=state.expenses.filter(e=>!lastS||e.ca>lastS);
+  let b=0,tot=0;
+  u.forEach(e=>{tot+=e.a;if(e.p===0)b+=e.a*(state.ratio[1]/100);else b-=e.a*(state.ratio[0]/100)});
+  return{unsettled:u,bal:Math.round(b*100)/100,totalU:tot};
+}
+
+// ─── SVG icons ─────────────────────────────────────────────────
+const ic={
+  plus:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  check:(c='currentColor',s=14)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>`,
+  edit:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  trash:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`,
+  clock:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ts)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  gear:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ts)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+  arrow:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`,
+  chev:(r=false)=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round" style="transition:transform .2s;${r?'transform:rotate(180deg)':''}"><path d="M6 9l6 6 6-6"/></svg>`,
+};
+
+// ─── Toast ─────────────────────────────────────────────────────
+function flash(msg){state.toast=msg;render();setTimeout(()=>{state.toast=null;render()},2000)}
+
+// ─── Render engine ─────────────────────────────────────────────
+function render(){
+  const el=document.getElementById('app');
+  const v=state.view;
+  if(v==='setup')el.innerHTML=renderSetup();
+  else if(v==='settings')el.innerHTML=renderSettings();
+  else if(v==='add')el.innerHTML=renderAdd();
+  else if(v==='history')el.innerHTML=renderHistory();
+  else el.innerHTML=renderMain();
+  bindEvents();
+}
+
+// ─── SETUP ─────────────────────────────────────────────────────
+function renderSetup(){
+  const ok=state.names[0].trim()&&state.names[1].trim();
+  return`<div style="padding:56px 24px 24px;display:flex;flex-direction:column;align-items:center">
+    <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--ac),var(--acl));display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:26px;color:#fff;font-weight:800">÷</div>
+    <h1 style="font-size:26px;font-weight:800;margin-bottom:6px;letter-spacing:-.03em">DuoSplit</h1>
+    <p style="color:var(--ts);font-size:13px;margin-bottom:36px;text-align:center">Partage de dépenses à deux,<br>simple et clair.</p>
+    <div style="width:100%;margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" id="n0" placeholder="Prénom…" value="${esc(state.names[0])}"></div>
+    <div style="width:100%;margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" id="n1" placeholder="Prénom…" value="${esc(state.names[1])}"></div>
+    <div style="width:100%;margin-bottom:32px">
+      <label class="lbl">Ratio de partage</label>
+      <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
+        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)">${state.ratio[0]}%</div><div style="font-size:11px;color:var(--ts);margin-top:2px">${esc(state.names[0])||'Pers. 1'}</div></div>
+        <input type="range" min="0" max="100" value="${state.ratio[0]}" id="ratio" style="flex:2">
+        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)">${state.ratio[1]}%</div><div style="font-size:11px;color:var(--ts);margin-top:2px">${esc(state.names[1])||'Pers. 2'}</div></div>
+      </div>
+    </div>
+    <button class="btn-p" id="goMain" ${ok?'':'disabled'}">Commencer</button>
+  </div>`;
+}
+
+// ─── SETTINGS ──────────────────────────────────────────────────
+function renderSettings(){
+  return`<div style="padding:18px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
+      <h2 style="font-size:17px;font-weight:700">Paramètres</h2><div style="width:78px"></div>
+    </div>
+    <div style="margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" id="n0" value="${esc(state.names[0])}"></div>
+    <div style="margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" id="n1" value="${esc(state.names[1])}"></div>
+    <div style="margin-bottom:30px">
+      <label class="lbl">Ratio de partage</label>
+      <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
+        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)">${state.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)">${esc(state.names[0])}</div></div>
+        <input type="range" min="0" max="100" value="${state.ratio[0]}" id="ratio" style="flex:2">
+        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)">${state.ratio[1]}%</div><div style="font-size:11px;color:var(--ts)">${esc(state.names[1])}</div></div>
+      </div>
+    </div>
+    <button class="btn-p" id="saveSett">Enregistrer</button>
+    <p style="color:var(--tm);font-size:11px;text-align:center;margin-top:32px">DuoSplit — Données stockées localement.</p>
+  </div>`;
+}
+
+// ─── ADD / EDIT ────────────────────────────────────────────────
+function renderAdd(){
+  const pa=parseFloat((state.fAmt||'0').replace(',','.'))||0;
+  const ok=state.fLabel.trim()&&pa>0;
+  let split='';
+  if(ok){
+    split=`<div class="card" style="background:var(--acs);border:1px solid rgba(124,107,240,.2);margin-bottom:18px">
+      <div style="font-size:11px;color:var(--ts);margin-bottom:6px">Répartition</div>
+      <div style="display:flex;justify-content:space-between;font-size:14px">
+        <span>${esc(state.names[0])}: ${fmt(pa*state.ratio[0]/100)}</span>
+        <span>${esc(state.names[1])}: ${fmt(pa*state.ratio[1]/100)}</span>
+      </div>
+    </div>`;
+  }
+  return`<div style="padding:18px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
+      <h2 style="font-size:17px;font-weight:700">${state.editId?'Modifier':'Nouvelle dépense'}</h2><div style="width:78px"></div>
+    </div>
+    <div style="margin-bottom:18px"><label class="lbl">Intitulé</label><input class="inp" id="fLabel" placeholder="Courses, resto, loyer…" value="${esc(state.fLabel)}" autofocus></div>
+    <div style="margin-bottom:18px"><label class="lbl">Montant (€)</label><input class="inp" id="fAmt" style="font-size:20px;font-weight:700" placeholder="0.00" type="number" inputmode="decimal" step="0.01" value="${esc(state.fAmt)}"></div>
+    <div style="margin-bottom:18px"><label class="lbl">Date</label><input class="inp" id="fDate" type="date" value="${state.fDate}"></div>
+    <div style="margin-bottom:28px">
+      <label class="lbl">Payé par</label>
+      <div style="display:flex;gap:10px">
+        ${state.names.map((n,i)=>`<button class="payer-btn" data-i="${i}" style="flex:1;padding:13px;border-radius:11px;border:2px solid ${state.fPayer===i?'var(--ac)':'var(--bd)'};background:${state.fPayer===i?'var(--acs)':'transparent'};color:${state.fPayer===i?'var(--ac)':'var(--ts)'};font-weight:600;font-size:15px;cursor:pointer">${esc(n)}</button>`).join('')}
+      </div>
+    </div>
+    ${split}
+    <button class="btn-p" id="saveExp" ${ok?'':'disabled'}>${state.editId?'Enregistrer':'Ajouter'}</button>
+  </div>`;
+}
+
+// ─── HISTORY ───────────────────────────────────────────────────
+function renderHistory(){
+  let items='';
+  if(state.settlements.length===0){
+    items=`<div style="text-align:center;padding:50px 20px;color:var(--tm)">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <p style="margin-top:14px;font-size:13px">Aucun règlement pour l'instant.</p>
+    </div>`;
+  }else{
+    items=[...state.settlements].reverse().map(s=>{
+      const expanded=state.expandedS===s.id;
+      let detail='';
+      if(expanded&&s.ex){
+        detail=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
+          <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${s.ex.length} dépense${s.ex.length>1?'s':''} — Total ${fmt(s.ex.reduce((a,e)=>a+e.a,0))}</div>
+          ${s.ex.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ts)"><span>${esc(e.l)} <span style="color:var(--tm)">(${esc(state.names[e.p])})</span></span><span>${fmt(e.a)}</span></div>`).join('')}
+        </div>`;
+      }
+      return`<div class="card settle-card" data-id="${s.id}" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:12px;color:var(--ts);margin-bottom:3px">${fmtD(s.d)}</div>
+            <div style="font-size:14px;font-weight:600"><span style="color:var(--no)">${esc(state.names[s.f])}</span><span style="color:var(--tm);margin:0 5px">→</span><span style="color:var(--ok)">${esc(state.names[s.t])}</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:17px;font-weight:700">${fmt(s.a)}</span>${ic.chev(expanded)}</div>
+        </div>${detail}
+      </div>`;
+    }).join('');
+  }
+  return`<div style="padding:18px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
+      <h2 style="font-size:17px;font-weight:700">Historique</h2><div style="width:78px"></div>
+    </div>${items}
+  </div>`;
+}
+
+// ─── MAIN ──────────────────────────────────────────────────────
+function renderMain(){
+  const{unsettled:u,bal:b,totalU:tot}=calcBalance();
+  const deb=b>0?1:0,cred=b>0?0:1,ab=Math.abs(b);
+  const sorted=[...u].sort((a,c)=>c.dt.localeCompare(a.dt)||(c.ca||'').localeCompare(a.ca||''));
+
+  let balCard;
+  if(b===0){
+    balCard=`<div class="card" style="padding:18px;margin-bottom:16px;text-align:center"><div style="font-size:13px;color:var(--ok);font-weight:700;margin-bottom:3px">✓ Tout est équilibré</div><div style="font-size:11px;color:var(--tm)">Aucune dette en cours</div></div>`;
+  }else{
+    balCard=`<div class="card" style="padding:18px;margin-bottom:16px;background:linear-gradient(135deg,var(--sf),${(b>0?'var(--ok)':'var(--no)')}0d)">
+      <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Balance</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:15px;font-weight:600;color:var(--no)">${esc(state.names[deb])}</span>
+        <div style="display:flex;align-items:center;gap:5px">${ic.arrow}<span style="font-size:24px;font-weight:800;color:var(--ac);letter-spacing:-.02em">${fmt(ab)}</span>${ic.arrow}</div>
+        <span style="font-size:15px;font-weight:600;color:var(--ok)">${esc(state.names[cred])}</span>
+      </div>
+      <button id="settleBtn" style="background:rgba(45,212,160,.1);color:var(--ok);border:1px solid rgba(45,212,160,.25);border-radius:9px;padding:9px;width:100%;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px">${ic.check('var(--ok)',14)} Marquer comme payé</button>
+    </div>`;
+  }
+
+  let stats='';
+  if(u.length>0){
+    stats=`<div style="display:flex;gap:8px;margin-bottom:16px">
+      ${[['Dépenses',u.length],['Total',fmt(tot)],['Règlements',state.settlements.length]].map(([l,v])=>`<div class="card" style="flex:1;padding:10px 12px;margin-bottom:0"><div style="font-size:10px;color:var(--tm);margin-bottom:1px">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('')}
+    </div>`;
+  }
+
+  let list;
+  if(sorted.length===0){
+    list=`<div class="card" style="text-align:center;padding:36px 20px;color:var(--tm)"><p style="font-size:13px;margin-bottom:3px">Aucune dépense</p><p style="font-size:11px">Appuyez sur + pour commencer</p></div>`;
+  }else{
+    list=sorted.map(x=>`<div class="card" style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(state.names[x.p])}</span></div></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span>
+        <button class="edit-btn" data-id="${x.id}" style="background:none;border:none;cursor:pointer;padding:3px;display:flex">${ic.edit}</button>
+        <button class="del-btn" data-id="${x.id}" style="background:none;border:none;cursor:pointer;padding:3px;display:flex">${ic.trash}</button>
+      </div>
+    </div>`).join('');
+  }
+
+  let toastH=state.toast?`<div class="toast">${esc(state.toast)}</div>`:'';
+  let settleModal='';
+  if(state.confirmSettle){
+    settleModal=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()">
+      <h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3>
+      <p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(state.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(state.names[cred])}</b></p>
+      <p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro. Les dépenses restent dans l'historique.</p>
+      <div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div>
+    </div></div>`;
+  }
+  let delModal='';
+  if(state.confirmDel){
+    delModal=`<div class="modal-bg" id="delModalBg"><div class="card" style="max-width:320px;width:100%;padding:22px" onclick="event.stopPropagation()">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Supprimer cette dépense ?</h3>
+      <div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelDel">Annuler</button><button class="btn-p" style="flex:1;background:var(--no)" id="doDel">Supprimer</button></div>
+    </div></div>`;
+  }
+
+  return`${toastH}${settleModal}${delModal}
+  <div style="padding:18px 24px 110px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em">DuoSplit</h1><p style="font-size:11px;color:var(--tm);margin-top:1px">${esc(state.names[0])} & ${esc(state.names[1])} · ${state.ratio[0]}/${state.ratio[1]}</p></div>
+      <div style="display:flex;gap:7px">
+        <button id="goHist" style="background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex">${ic.clock}</button>
+        <button id="goSett" style="background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex">${ic.gear}</button>
+      </div>
+    </div>
+    ${balCard}${stats}
+    <h2 style="font-size:12px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Dépenses en cours</h2>
+    ${list}
+  </div>
+  <button class="fab" id="addBtn">${ic.plus}</button>`;
+}
+
+// ─── Event binding ─────────────────────────────────────────────
+function bindEvents(){
+  // Setup
+  on('n0','input',e=>{state.names=[e.target.value,state.names[1]];render()});
+  on('n1','input',e=>{state.names=[state.names[0],e.target.value];render()});
+  on('ratio','input',e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));state.ratio=[v,100-v];render()});
+  on('goMain','click',()=>{if(state.names[0].trim()&&state.names[1].trim()){state.view='main';persist();flash("C'est parti !")}});
+  // Nav
+  on('back','click',()=>{state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.expandedS=null;state.view='main';render()});
+  on('goHist','click',()=>{state.view='history';render()});
+  on('goSett','click',()=>{state.view='settings';render()});
+  on('saveSett','click',()=>{if(state.names[0].trim()&&state.names[1].trim()){persist();state.view='main';flash('Sauvegardé ✓')}});
+  // Add
+  on('addBtn','click',()=>{state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.view='add';render()});
+  on('fLabel','input',e=>{state.fLabel=e.target.value});
+  on('fAmt','input',e=>{state.fAmt=e.target.value});
+  on('fDate','input',e=>{state.fDate=e.target.value});
+  document.querySelectorAll('.payer-btn').forEach(b=>b.addEventListener('click',()=>{state.fPayer=parseInt(b.dataset.i);render()}));
+  on('saveExp','click',()=>{
+    const a=parseFloat((state.fAmt||'0').replace(',','.'))||0;
+    if(!state.fLabel.trim()||a<=0)return;
+    if(state.editId){state.expenses=state.expenses.map(e=>e.id===state.editId?{...e,l:state.fLabel.trim(),a,dt:state.fDate,p:state.fPayer}:e);flash('Modifiée ✓')}
+    else{state.expenses.push({id:Date.now().toString(),l:state.fLabel.trim(),a,dt:state.fDate,p:state.fPayer,ca:new Date().toISOString()});flash('Ajoutée ✓')}
+    state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.view='main';persist();
+  });
+  // Edit/Delete
+  document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();const x=state.expenses.find(ex=>ex.id===b.dataset.id);
+    if(x){state.fLabel=x.l;state.fAmt=String(x.a);state.fDate=x.dt;state.fPayer=x.p;state.editId=x.id;state.view='add';render()}
+  }));
+  document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();state.confirmDel=b.dataset.id;render()}));
+  on('cancelDel','click',()=>{state.confirmDel=null;render()});
+  on('doDel','click',()=>{state.expenses=state.expenses.filter(e=>e.id!==state.confirmDel);state.confirmDel=null;persist();flash('Supprimée')});
+  on('delModalBg','click',()=>{state.confirmDel=null;render()});
+  // Settle
+  on('settleBtn','click',()=>{state.confirmSettle=true;render()});
+  on('cancelSettle','click',()=>{state.confirmSettle=false;render()});
+  on('modalBg','click',()=>{state.confirmSettle=false;render()});
+  on('doSettle','click',()=>{
+    const{unsettled:u,bal:b}=calcBalance();
+    if(b===0)return;
+    state.settlements.push({id:Date.now().toString(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});
+    state.confirmSettle=false;persist();flash('Soldé ✓');
+  });
+  // History expand
+  document.querySelectorAll('.settle-card').forEach(c=>c.addEventListener('click',()=>{
+    state.expandedS=state.expandedS===c.dataset.id?null:c.dataset.id;render();
+  }));
+}
+
+function on(id,ev,fn){const el=document.getElementById(id);if(el)el.addEventListener(ev,fn)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ─── Init ──────────────────────────────────────────────────────
+render();
+
+// ─── Service Worker Registration ───────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
