@@ -2,354 +2,532 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DuoSplit">
 <title>DuoSplit</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6bf0'/><text x='50' y='68' text-anchor='middle' font-size='55' font-weight='800' fill='white'>÷</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6bf0'/><text x='50' y='68' text-anchor='middle' font-size='55' font-weight='800' fill='white'>÷</text></svg>">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237c6bf0'/><text x='50' y='68' text-anchor='middle' font-size='55' font-weight='800' fill='white'>÷</text></svg>">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- QR generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- QR scanning fallback -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0a0a0e;--sf:#141419;--bd:#262632;--ac:#7c6bf0;--acl:#b0a4ff;--acs:rgba(124,107,240,.13);--ok:#2dd4a0;--no:#f87171;--t:#ebebf0;--ts:#8585a0;--tm:#50506a}
 html,body{height:100%;background:var(--bg);color:var(--t);font-family:'DM Sans',system-ui,sans-serif;overflow-x:hidden}
-input,button,select{font-family:inherit}
+input,button,select,textarea{font-family:inherit}
 input:focus{outline:none;border-color:var(--ac)!important}
 input[type=range]{height:4px;accent-color:var(--ac)}
 input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
-.app{max-width:460px;margin:0 auto;min-height:100vh;position:relative}
+.app{max-width:460px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative}
 .card{background:var(--sf);border-radius:14px;border:1px solid var(--bd);padding:16px;margin-bottom:10px}
-.inp{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:13px 15px;color:var(--t);font-size:15px;width:100%}
+.inp{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:13px 15px;color:var(--t);font-size:15px;width:100%;box-sizing:border-box}
 .lbl{font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:block}
 .btn-p{background:var(--ac);color:#fff;border:none;border-radius:11px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%}
 .btn-g{background:transparent;color:var(--ts);border:1px solid var(--bd);border-radius:11px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer}
-.btn-p:disabled{opacity:.35}
-.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10}
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:100;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:tIn .3s}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px}
-.row{display:flex;align-items:center}
-.gap-8{gap:8px}.gap-10{gap:10px}
+.btn-p[disabled]{opacity:.35;pointer-events:none}
+.hdr-btn{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:tIn .3s;white-space:nowrap}
+.toast.ok{background:var(--ok)}.toast.no{background:var(--no)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s}
+.payer-btn{flex:1;padding:13px;border-radius:11px;font-weight:600;font-size:15px;cursor:pointer;transition:all .15s;font-family:inherit}
+.payer-btn.on{border:2px solid var(--ac);background:var(--acs);color:var(--ac)}
+.payer-btn.off{border:2px solid var(--bd);background:transparent;color:var(--ts)}
+.exp-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
+.exp-row .actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.exp-row .actions button{background:none;border:none;cursor:pointer;padding:4px;display:flex}
+.sync-choice{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.sync-opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:all .15s;text-align:left}
+.sync-opt:hover,.sync-opt:active{border-color:var(--ac);background:var(--acs)}
+.sync-opt .ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sync-opt h4{font-size:14px;font-weight:600;margin-bottom:2px}
+.sync-opt p{font-size:11px;color:var(--tm);margin:0}
+#qrCanvas{display:flex;align-items:center;justify-content:center;margin:16px auto;background:#fff;border-radius:12px;padding:12px}
+#qrCanvas canvas,#qrCanvas img{border-radius:4px}
+#scanVideo{width:100%;border-radius:12px;background:#000;display:block}
+.scan-frame{position:relative;margin:16px 0}
+.scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.scan-box{width:200px;height:200px;border:3px solid var(--ac);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{border-color:var(--ac)}50%{border-color:var(--acl)}}
 @keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(display-mode:standalone){body{padding-top:env(safe-area-inset-top)}}
 </style>
 </head>
 <body>
 <div id="app" class="app"></div>
-
 <script>
+// ═══════════════════════════════════════════════════════════════
+//  DuoSplit — Tricount-like PWA for couples
+// ═══════════════════════════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n);
+const fmtD=d=>new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
 // ─── Storage ───────────────────────────────────────────────────
 const KEY='duosplit';
 const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}};
-const save=d=>localStorage.setItem(KEY,JSON.stringify(d));
+let _st;function persist(){clearTimeout(_st);_st=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements}))}catch{}},150)}
 
-// ─── State ─────────────────────────────────────────────────────
-let state={names:['',''],ratio:[50,50],expenses:[],settlements:[],view:'setup',
-  editId:null,fLabel:'',fAmt:'',fDate:today(),fPayer:0,
-  confirmSettle:false,confirmDel:null,toast:null,expandedS:null};
+// ─── Size limits ───────────────────────────────────────────────
+// ─── Size limits ───────────────────────────────────────────────
+const QR_MAX=2500;  // safe QR payload (version 40 level L ≈ 2953, with margin)
+const URL_MAX=6000; // safe URL length for all browsers/apps
 
-const stored=load();
-if(stored){
-  state.names=stored.n||['',''];
-  state.ratio=stored.r||[50,50];
-  state.expenses=stored.e||[];
-  state.settlements=stored.s||[];
-  if(state.names[0]&&state.names[1])state.view='main';
+function encodeData(data){
+  try{return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}catch{return null}
+}
+function decodeData(str){
+  try{const b=str.replace(/-/g,'+').replace(/_/g,'/');const p=b.length%4;return JSON.parse(decodeURIComponent(escape(atob(p?b+'='.repeat(4-p):b))))}catch{return null}
+}
+function mergeData(local,remote){
+  const em=new Map();(local.e||[]).forEach(e=>em.set(e.id,e));(remote.e||[]).forEach(e=>{if(!em.has(e.id))em.set(e.id,e)});
+  const sm=new Map();(local.s||[]).forEach(s=>sm.set(s.id,s));(remote.s||[]).forEach(s=>{if(!sm.has(s.id))sm.set(s.id,s)});
+  return{n:remote.n||local.n,r:remote.r||local.r,e:[...em.values()],s:[...sm.values()].sort((a,b)=>(a.d||'').localeCompare(b.d||''))};
 }
 
-function today(){return new Date().toISOString().slice(0,10)}
-function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n)}
-function fmtD(d){return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}
+// ─── Smart data packing (progressive reduction) ───────────────
+// Strips data progressively until it fits maxBytes:
+// 1. Full data
+// 2. Remove expense details from settlements (ex arrays)
+// 3. Keep only last 5 settlements
+// 4. Keep only last 3 settlements
+// 5. Remove all settlements
+// 6. Keep only unsettled expenses
+// 7. Keep only last 30 unsettled expenses
+// Returns {encoded, warning, tooLarge}
+function packData(maxBytes){
+  const base={n:S.names,r:S.ratio};
+  const{u}=calcBal();
+  // All settlement ids for reference
+  const sLight=s=>({id:s.id,d:s.d,a:s.a,f:s.f,t:s.t}); // settlement without expense details
 
-// ─── Persist ───────────────────────────────────────────────────
-let saveT;
-function persist(){clearTimeout(saveT);saveT=setTimeout(()=>save({n:state.names,r:state.ratio,e:state.expenses,s:state.settlements}),200)}
+  const strategies=[
+    // 1: Full data
+    ()=>({d:{...base,e:S.expenses,s:S.settlements},w:null}),
+    // 2: Settlements without embedded expense arrays
+    ()=>({d:{...base,e:S.expenses,s:S.settlements.map(sLight)},w:null}),
+    // 3: Only last 5 settlements (light)
+    ()=>({d:{...base,e:S.expenses,s:S.settlements.slice(-5).map(sLight)},w:'Derniers 5 règlements uniquement'}),
+    // 4: Only last 3 settlements (light)
+    ()=>({d:{...base,e:S.expenses,s:S.settlements.slice(-3).map(sLight)},w:'Derniers 3 règlements uniquement'}),
+    // 5: No settlements
+    ()=>({d:{...base,e:S.expenses,s:[]},w:'Sans historique de règlements'}),
+    // 6: Only unsettled expenses
+    ()=>({d:{...base,e:u,s:[]},w:`${u.length} dépense${u.length>1?'s':''} en cours uniquement`}),
+    // 7: Last 30 unsettled
+    ()=>({d:{...base,e:u.slice(-30),s:[]},w:'30 dernières dépenses en cours'}),
+    // 8: Last 15
+    ()=>({d:{...base,e:u.slice(-15),s:[]},w:'15 dernières dépenses en cours'}),
+  ];
 
-// ─── Balance calc ──────────────────────────────────────────────
-function calcBalance(){
-  const lastS=state.settlements.length>0?state.settlements[state.settlements.length-1].d:null;
-  const u=state.expenses.filter(e=>!lastS||e.ca>lastS);
-  let b=0,tot=0;
-  u.forEach(e=>{tot+=e.a;if(e.p===0)b+=e.a*(state.ratio[1]/100);else b-=e.a*(state.ratio[0]/100)});
-  return{unsettled:u,bal:Math.round(b*100)/100,totalU:tot};
+  for(const strat of strategies){
+    const{d,w}=strat();
+    const enc=encodeData(d);
+    if(enc&&enc.length<=maxBytes)return{encoded:enc,warning:w,tooLarge:false};
+  }
+  return{encoded:null,warning:null,tooLarge:true};
 }
 
-// ─── SVG icons ─────────────────────────────────────────────────
-const ic={
-  plus:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  check:(c='currentColor',s=14)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>`,
-  edit:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-  trash:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`,
-  clock:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ts)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-  gear:`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ts)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
-  arrow:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`,
-  chev:(r=false)=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round" style="transition:transform .2s;${r?'transform:rotate(180deg)':''}"><path d="M6 9l6 6 6-6"/></svg>`,
+// ─── Share via link ────────────────────────────────────────────
+async function shareLink(){
+  const baseUrl=window.location.href.split('#')[0]+'#sync=';
+  const available=URL_MAX-baseUrl.length;
+  const{encoded,warning,tooLarge}=packData(available);
+  if(tooLarge){flash('Trop de données — soldez d\'abord','no');return}
+  const url=baseUrl+encoded;
+  if(navigator.share){try{await navigator.share({title:'DuoSplit — '+S.names[0]+' & '+S.names[1],text:'Synchronise nos dépenses :',url});flash('Partagé ✓','ok')}catch(e){if(e.name!=='AbortError')copyUrl(url)}}
+  else copyUrl(url);
+}
+function copyUrl(u){navigator.clipboard.writeText(u).then(()=>flash('Lien copié ✓','ok')).catch(()=>flash('Erreur','no'))}
+
+// ─── QR Code Sync ──────────────────────────────────────────────
+let scanStream=null;let scanAnim=null;
+
+function showQR(){
+  S.syncView='qr';render();
+  const container=$('qrCanvas');
+  if(!container)return;
+  container.innerHTML='';
+  const prefix='DUOSPLIT:';
+  const{encoded,warning,tooLarge}=packData(QR_MAX-prefix.length);
+  if(tooLarge){
+    container.innerHTML='<p style="color:var(--no);font-size:13px;padding:20px;text-align:center">Trop de données pour un QR code.<br>Soldez vos comptes ou utilisez le lien.</p>';
+    return;
+  }
+  try{new QRCode(container,{text:prefix+encoded,width:240,height:240,correctLevel:QRCode.CorrectLevel.L})}
+  catch{container.innerHTML='<p style="color:var(--no);font-size:13px">Erreur QR</p>';return}
+  const note=$('qrNote');
+  if(note&&warning)note.textContent='⚠ '+warning;
+  else if(note)note.textContent=`${S.expenses.length} dépense${S.expenses.length>1?'s':''} · ${S.settlements.length} règlement${S.settlements.length>1?'s':''}`;
+}
+
+async function startScan(){
+  S.syncView='scan';render();
+  const video=$('scanVideo');
+  if(!video)return;
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:640}}});
+    video.srcObject=scanStream;
+    await video.play();
+    scanFrame(video);
+  }catch(e){
+    flash("Caméra refusée",'no');
+    S.syncView='menu';render();
+  }
+}
+
+function scanFrame(video){
+  if(!scanStream)return;
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  function tick(){
+    if(!scanStream){return}
+    if(video.readyState===video.HAVE_ENOUGH_DATA){
+      canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      // Try native BarcodeDetector first, fallback to jsQR
+      let code=null;
+      if(typeof jsQR!=='undefined'){
+        code=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'dontInvert'});
+      }
+      if(code&&code.data){
+        handleScannedData(code.data);
+        return;
+      }
+    }
+    scanAnim=requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function handleScannedData(raw){
+  stopScan();
+  if(!raw.startsWith('DUOSPLIT:')){
+    flash('QR non reconnu','no');
+    S.syncView='menu';render();return;
+  }
+  const payload=raw.slice(9);
+  const remote=decodeData(payload);
+  if(!remote){flash('Données invalides','no');S.syncView='menu';render();return}
+  S.pendingSync=remote;
+  S.syncView=null;S.showSync=false;render();
+}
+
+function stopScan(){
+  if(scanAnim)cancelAnimationFrame(scanAnim);scanAnim=null;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+}
+
+// ─── SVG Icons ─────────────────────────────────────────────────
+const svg=(d,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const IC={
+  plus:svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',24),
+  check:svg('<path d="M20 6L9 17l-5-5"/>',14),
+  trash:svg('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>',15),
+  edit:svg('<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>',15),
+  clock:svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+  gear:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'),
+  arrow:svg('<path d="M5 12h14M12 5l7 7-7 7"/>',15),
+  chev:(flip)=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="transition:transform .2s;${flip?'transform:rotate(180deg)':''}"><path d="M6 9l6 6 6-6"/></svg>`,
+  share:svg('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'),
+  merge:svg('<path d="M8 6l4 4 4-4"/><path d="M12 2v8"/><path d="M4 16c0-2 2-4 4-4h8c2 0 4 2 4 4"/><circle cx="12" cy="20" r="2"/>',20),
+  qr:svg('<rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4" rx="1"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/>'),
+  cam:svg('<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>'),
+  link:svg('<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>'),
 };
 
+// ─── State ─────────────────────────────────────────────────────
+let S={names:['',''],ratio:[50,50],expenses:[],settlements:[],view:'setup',editId:null,fLabel:'',fAmt:'',fDate:today(),fPayer:0,confirmSettle:false,confirmDel:null,toast:null,toastType:'',expandedS:null,pendingSync:null,showSync:false,syncView:null};
+
+const stored=load();
+if(stored){S.names=stored.n||['',''];S.ratio=stored.r||[50,50];S.expenses=stored.e||[];S.settlements=stored.s||[];if(S.names[0]&&S.names[1])S.view='main'}
+
+// Check URL for incoming sync
+(function(){const h=window.location.hash;if(h.startsWith('#sync=')){const r=decodeData(h.slice(6));if(r)S.pendingSync=r;history.replaceState(null,'',window.location.pathname+window.location.search)}})();
+
+// ─── Balance ───────────────────────────────────────────────────
+function calcBal(){
+  const ls=S.settlements.length>0?S.settlements[S.settlements.length-1].d:null;
+  const u=S.expenses.filter(e=>!ls||e.ca>ls);
+  let b=0,tot=0;u.forEach(e=>{tot+=e.a;b+=e.p===0?e.a*(S.ratio[1]/100):-e.a*(S.ratio[0]/100)});
+  return{u,b:Math.round(b*100)/100,tot};
+}
+
 // ─── Toast ─────────────────────────────────────────────────────
-function flash(msg){state.toast=msg;render();setTimeout(()=>{state.toast=null;render()},2000)}
+let _tt;function flash(msg,type=''){S.toast=msg;S.toastType=type;render();clearTimeout(_tt);_tt=setTimeout(()=>{S.toast=null;render()},2200)}
 
-// ─── Render engine ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
 function render(){
-  const el=document.getElementById('app');
-  const v=state.view;
-  if(v==='setup')el.innerHTML=renderSetup();
-  else if(v==='settings')el.innerHTML=renderSettings();
-  else if(v==='add')el.innerHTML=renderAdd();
-  else if(v==='history')el.innerHTML=renderHistory();
-  else el.innerHTML=renderMain();
-  bindEvents();
+  let html='';
+  if(S.toast)html+=`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`;
+  if(S.pendingSync&&S.view==='main')html+=renderSyncModal();
+  if(S.showSync)html+=renderSyncPanel();
+  if(S.view==='setup')html+=renderSetup();
+  else if(S.view==='settings')html+=renderSettings();
+  else if(S.view==='add')html+=renderAdd();
+  else if(S.view==='history')html+=renderHistory();
+  else html+=renderMain();
+  $('app').innerHTML=html;
+  bind();
+  // Post-render hooks
+  if(S.showSync&&S.syncView==='qr')setTimeout(showQR,50);
+  if(S.showSync&&S.syncView==='scan')setTimeout(startScan,50);
 }
 
-// ─── SETUP ─────────────────────────────────────────────────────
 function renderSetup(){
-  const ok=state.names[0].trim()&&state.names[1].trim();
+  const ok=S.names[0].trim()&&S.names[1].trim();
   return`<div style="padding:56px 24px 24px;display:flex;flex-direction:column;align-items:center">
-    <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--ac),var(--acl));display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:26px;color:#fff;font-weight:800">÷</div>
-    <h1 style="font-size:26px;font-weight:800;margin-bottom:6px;letter-spacing:-.03em">DuoSplit</h1>
-    <p style="color:var(--ts);font-size:13px;margin-bottom:36px;text-align:center">Partage de dépenses à deux,<br>simple et clair.</p>
-    <div style="width:100%;margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" id="n0" placeholder="Prénom…" value="${esc(state.names[0])}"></div>
-    <div style="width:100%;margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" id="n1" placeholder="Prénom…" value="${esc(state.names[1])}"></div>
-    <div style="width:100%;margin-bottom:32px">
-      <label class="lbl">Ratio de partage</label>
-      <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
-        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)">${state.ratio[0]}%</div><div style="font-size:11px;color:var(--ts);margin-top:2px">${esc(state.names[0])||'Pers. 1'}</div></div>
-        <input type="range" min="0" max="100" value="${state.ratio[0]}" id="ratio" style="flex:2">
-        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)">${state.ratio[1]}%</div><div style="font-size:11px;color:var(--ts);margin-top:2px">${esc(state.names[1])||'Pers. 2'}</div></div>
-      </div>
+  <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--ac),var(--acl));display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:26px;color:#fff;font-weight:800">÷</div>
+  <h1 style="font-size:26px;font-weight:800;margin-bottom:6px;letter-spacing:-.03em">DuoSplit</h1>
+  <p style="color:var(--ts);font-size:13px;margin-bottom:36px;text-align:center">Partage de dépenses à deux,<br>simple et clair.</p>
+  <div style="width:100%;margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" data-f="n0" placeholder="Prénom…" value="${esc(S.names[0])}"></div>
+  <div style="width:100%;margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" data-f="n1" placeholder="Prénom…" value="${esc(S.names[1])}"></div>
+  <div style="width:100%;margin-bottom:32px"><label class="lbl">Ratio de partage</label>
+    <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
+      <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)" id="r0">${S.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)" id="rn0">${esc(S.names[0])||'Pers. 1'}</div></div>
+      <input type="range" min="0" max="100" value="${S.ratio[0]}" data-f="ratio" style="flex:2">
+      <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)" id="r1">${S.ratio[1]}%</div><div style="font-size:11px;color:var(--ts)" id="rn1">${esc(S.names[1])||'Pers. 2'}</div></div>
     </div>
-    <button class="btn-p" id="goMain" ${ok?'':'disabled'}">Commencer</button>
-  </div>`;
+  </div>
+  <button class="btn-p" id="goMain" ${ok?'':'disabled'}>Commencer</button>
+</div>`;
 }
 
-// ─── SETTINGS ──────────────────────────────────────────────────
 function renderSettings(){
   return`<div style="padding:18px 24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
-      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
-      <h2 style="font-size:17px;font-weight:700">Paramètres</h2><div style="width:78px"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">Paramètres</h2><div style="width:78px"></div></div>
+  <div style="margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" data-f="n0" value="${esc(S.names[0])}"></div>
+  <div style="margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" data-f="n1" value="${esc(S.names[1])}"></div>
+  <div style="margin-bottom:30px"><label class="lbl">Ratio de partage</label>
+    <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
+      <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)" id="r0">${S.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)" id="rn0">${esc(S.names[0])}</div></div>
+      <input type="range" min="0" max="100" value="${S.ratio[0]}" data-f="ratio" style="flex:2">
+      <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)" id="r1">${S.ratio[1]}%</div><div style="font-size:11px;color:var(--ts)" id="rn1">${esc(S.names[1])}</div></div>
     </div>
-    <div style="margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" id="n0" value="${esc(state.names[0])}"></div>
-    <div style="margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" id="n1" value="${esc(state.names[1])}"></div>
-    <div style="margin-bottom:30px">
-      <label class="lbl">Ratio de partage</label>
-      <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
-        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)">${state.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)">${esc(state.names[0])}</div></div>
-        <input type="range" min="0" max="100" value="${state.ratio[0]}" id="ratio" style="flex:2">
-        <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--acl)">${state.ratio[1]}%</div><div style="font-size:11px;color:var(--ts)">${esc(state.names[1])}</div></div>
-      </div>
-    </div>
-    <button class="btn-p" id="saveSett">Enregistrer</button>
-    <p style="color:var(--tm);font-size:11px;text-align:center;margin-top:32px">DuoSplit — Données stockées localement.</p>
-  </div>`;
+  </div>
+  <button class="btn-p" id="saveSett">Enregistrer</button>
+  <p style="color:var(--tm);font-size:11px;text-align:center;margin-top:32px">DuoSplit — Données locales.<br>Synchronisez via partage ou QR code.</p>
+</div>`;
 }
 
-// ─── ADD / EDIT ────────────────────────────────────────────────
 function renderAdd(){
-  const pa=parseFloat((state.fAmt||'0').replace(',','.'))||0;
-  const ok=state.fLabel.trim()&&pa>0;
+  const pa=parseFloat((S.fAmt||'0').replace(',','.'))||0;const ok=S.fLabel.trim()&&pa>0;
   let split='';
-  if(ok){
-    split=`<div class="card" style="background:var(--acs);border:1px solid rgba(124,107,240,.2);margin-bottom:18px">
-      <div style="font-size:11px;color:var(--ts);margin-bottom:6px">Répartition</div>
-      <div style="display:flex;justify-content:space-between;font-size:14px">
-        <span>${esc(state.names[0])}: ${fmt(pa*state.ratio[0]/100)}</span>
-        <span>${esc(state.names[1])}: ${fmt(pa*state.ratio[1]/100)}</span>
-      </div>
-    </div>`;
-  }
+  if(ok)split=`<div class="card" style="background:var(--acs);border:1px solid rgba(124,107,240,.2);margin-bottom:18px"><div style="font-size:11px;color:var(--ts);margin-bottom:6px">Répartition</div><div style="display:flex;justify-content:space-between;font-size:14px" id="splitP"><span>${esc(S.names[0])}: ${fmt(pa*S.ratio[0]/100)}</span><span>${esc(S.names[1])}: ${fmt(pa*S.ratio[1]/100)}</span></div></div>`;
   return`<div style="padding:18px 24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
-      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
-      <h2 style="font-size:17px;font-weight:700">${state.editId?'Modifier':'Nouvelle dépense'}</h2><div style="width:78px"></div>
-    </div>
-    <div style="margin-bottom:18px"><label class="lbl">Intitulé</label><input class="inp" id="fLabel" placeholder="Courses, resto, loyer…" value="${esc(state.fLabel)}" autofocus></div>
-    <div style="margin-bottom:18px"><label class="lbl">Montant (€)</label><input class="inp" id="fAmt" style="font-size:20px;font-weight:700" placeholder="0.00" type="number" inputmode="decimal" step="0.01" value="${esc(state.fAmt)}"></div>
-    <div style="margin-bottom:18px"><label class="lbl">Date</label><input class="inp" id="fDate" type="date" value="${state.fDate}"></div>
-    <div style="margin-bottom:28px">
-      <label class="lbl">Payé par</label>
-      <div style="display:flex;gap:10px">
-        ${state.names.map((n,i)=>`<button class="payer-btn" data-i="${i}" style="flex:1;padding:13px;border-radius:11px;border:2px solid ${state.fPayer===i?'var(--ac)':'var(--bd)'};background:${state.fPayer===i?'var(--acs)':'transparent'};color:${state.fPayer===i?'var(--ac)':'var(--ts)'};font-weight:600;font-size:15px;cursor:pointer">${esc(n)}</button>`).join('')}
-      </div>
-    </div>
-    ${split}
-    <button class="btn-p" id="saveExp" ${ok?'':'disabled'}>${state.editId?'Enregistrer':'Ajouter'}</button>
-  </div>`;
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">${S.editId?'Modifier':'Nouvelle dépense'}</h2><div style="width:78px"></div></div>
+  <div style="margin-bottom:18px"><label class="lbl">Intitulé</label><input class="inp" data-f="fLabel" placeholder="Courses, resto, loyer…" value="${esc(S.fLabel)}"></div>
+  <div style="margin-bottom:18px"><label class="lbl">Montant (€)</label><input class="inp" data-f="fAmt" style="font-size:20px;font-weight:700" placeholder="0.00" type="number" inputmode="decimal" step="0.01" value="${esc(S.fAmt)}"></div>
+  <div style="margin-bottom:18px"><label class="lbl">Date</label><input class="inp" data-f="fDate" type="date" value="${S.fDate}"></div>
+  <div style="margin-bottom:28px"><label class="lbl">Payé par</label><div style="display:flex;gap:10px">${S.names.map((n,i)=>`<button class="payer-btn ${S.fPayer===i?'on':'off'}" data-i="${i}">${esc(n)}</button>`).join('')}</div></div>
+  ${split}
+  <button class="btn-p" id="saveExp" ${ok?'':'disabled'}>${S.editId?'Enregistrer':'Ajouter'}</button>
+</div>`;
 }
 
-// ─── HISTORY ───────────────────────────────────────────────────
 function renderHistory(){
   let items='';
-  if(state.settlements.length===0){
-    items=`<div style="text-align:center;padding:50px 20px;color:var(--tm)">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <p style="margin-top:14px;font-size:13px">Aucun règlement pour l'instant.</p>
-    </div>`;
-  }else{
-    items=[...state.settlements].reverse().map(s=>{
-      const expanded=state.expandedS===s.id;
-      let detail='';
-      if(expanded&&s.ex){
-        detail=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
-          <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${s.ex.length} dépense${s.ex.length>1?'s':''} — Total ${fmt(s.ex.reduce((a,e)=>a+e.a,0))}</div>
-          ${s.ex.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ts)"><span>${esc(e.l)} <span style="color:var(--tm)">(${esc(state.names[e.p])})</span></span><span>${fmt(e.a)}</span></div>`).join('')}
-        </div>`;
-      }
-      return`<div class="card settle-card" data-id="${s.id}" style="cursor:pointer">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:12px;color:var(--ts);margin-bottom:3px">${fmtD(s.d)}</div>
-            <div style="font-size:14px;font-weight:600"><span style="color:var(--no)">${esc(state.names[s.f])}</span><span style="color:var(--tm);margin:0 5px">→</span><span style="color:var(--ok)">${esc(state.names[s.t])}</span></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:17px;font-weight:700">${fmt(s.a)}</span>${ic.chev(expanded)}</div>
-        </div>${detail}
-      </div>`;
-    }).join('');
-  }
-  return`<div style="padding:18px 24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
-      <button class="btn-g" style="padding:8px 14px" id="back">← Retour</button>
-      <h2 style="font-size:17px;font-weight:700">Historique</h2><div style="width:78px"></div>
-    </div>${items}
-  </div>`;
+  if(!S.settlements.length)items=`<div style="text-align:center;padding:50px 20px;color:var(--tm)">${svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',36)}<p style="margin-top:14px;font-size:13px">Aucun règlement.</p></div>`;
+  else items=[...S.settlements].reverse().map(s=>{
+    const ex=S.expandedS===s.id;let det='';
+    if(ex&&s.ex)det=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${s.ex.length} dépense${s.ex.length>1?'s':''} — Total ${fmt(s.ex.reduce((a,e)=>a+e.a,0))}</div>${s.ex.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ts)"><span>${esc(e.l)} <span style="color:var(--tm)">(${esc(S.names[e.p])})</span></span><span>${fmt(e.a)}</span></div>`).join('')}</div>`;
+    return`<div class="card stog" data-id="${s.id}" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--ts);margin-bottom:3px">${fmtD(s.d)}</div><div style="font-size:14px;font-weight:600"><span style="color:var(--no)">${esc(S.names[s.f])}</span><span style="color:var(--tm);margin:0 5px">→</span><span style="color:var(--ok)">${esc(S.names[s.t])}</span></div></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:17px;font-weight:700">${fmt(s.a)}</span><span style="display:flex;color:var(--tm)">${IC.chev(ex)}</span></div></div>${det}</div>`;
+  }).join('');
+  return`<div style="padding:18px 24px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">Historique</h2><div style="width:78px"></div></div>${items}</div>`;
 }
 
-// ─── MAIN ──────────────────────────────────────────────────────
+function renderSyncModal(){
+  const r=S.pendingSync;
+  const ne=(r.e||[]).filter(e=>!S.expenses.find(x=>x.id===e.id)).length;
+  const ns=(r.s||[]).filter(s=>!S.settlements.find(x=>x.id===s.id)).length;
+  return`<div class="modal-bg" style="z-index:60"><div class="card" style="max-width:360px;width:100%;padding:22px" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><div style="color:var(--ac)">${IC.merge}</div><h3 style="font-size:17px;font-weight:700">Synchronisation reçue</h3></div>
+    <p style="font-size:13px;color:var(--ts);margin-bottom:6px">De <b style="color:var(--t)">${esc((r.n||[])[0])} & ${esc((r.n||[])[1])}</b></p>
+    <p style="font-size:13px;color:var(--ts);margin-bottom:16px">${ne?`<b style="color:var(--ac)">${ne}</b> nouvelle${ne>1?'s':''} dépense${ne>1?'s':''}`:''} ${ne&&ns?' · ':''} ${ns?`<b style="color:var(--ac)">${ns}</b> nouveau${ns>1?'x':''} règlement${ns>1?'s':''}`:''} ${!ne&&!ns?'Déjà à jour.':'à importer.'}</p>
+    <div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="syncNo">Ignorer</button><button class="btn-p" style="flex:1;background:var(--ok)" id="syncYes">Fusionner</button></div>
+  </div></div>`;
+}
+
+// ─── SYNC PANEL (QR menu, show QR, scan) ───────────────────────
+function renderSyncPanel(){
+  let content='';
+  if(S.syncView==='qr'){
+    content=`<div class="card" style="max-width:380px;width:100%;padding:22px" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <button class="btn-g" style="padding:6px 12px;font-size:13px" id="syncBackMenu">← Retour</button>
+        <h3 style="font-size:16px;font-weight:700">Mon QR Code</h3><div style="width:70px"></div>
+      </div>
+      <p style="font-size:12px;color:var(--ts);text-align:center;margin-bottom:4px">L'autre téléphone scanne ce code</p>
+      <p style="font-size:11px;color:var(--tm);text-align:center" id="qrNote">${S.expenses.length} dépense${S.expenses.length>1?'s':''} · ${S.settlements.length} règlement${S.settlements.length>1?'s':''}</p>
+      <div id="qrCanvas"></div>
+      <button class="btn-g" style="width:100%;margin-top:8px" id="syncClose">Fermer</button>
+    </div>`;
+  }else if(S.syncView==='scan'){
+    content=`<div class="card" style="max-width:380px;width:100%;padding:22px" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <button class="btn-g" style="padding:6px 12px;font-size:13px" id="syncBackMenu">← Retour</button>
+        <h3 style="font-size:16px;font-weight:700">Scanner un QR</h3><div style="width:70px"></div>
+      </div>
+      <p style="font-size:12px;color:var(--ts);text-align:center;margin-bottom:10px">Pointez vers le QR code de l'autre téléphone</p>
+      <div class="scan-frame">
+        <video id="scanVideo" autoplay playsinline muted></video>
+        <div class="scan-overlay"><div class="scan-box"></div></div>
+      </div>
+      <button class="btn-g" style="width:100%;margin-top:12px" id="syncClose">Annuler</button>
+    </div>`;
+  }else{
+    // Menu
+    const qrPack=packData(QR_MAX-9);
+    const urlPack=packData(URL_MAX-120);
+    const totalExp=S.expenses.length;
+    const totalSet=S.settlements.length;
+    const sizeInfo=`${totalExp} dépense${totalExp>1?'s':''} · ${totalSet} règlement${totalSet>1?'s':''}`;
+    const qrOk=!qrPack.tooLarge;
+    const urlOk=!urlPack.tooLarge;
+    const qrWarn=qrPack.warning?`<span style="display:block;font-size:10px;color:var(--no);margin-top:2px">⚠ ${qrPack.warning}</span>`:'';
+    const urlWarn=urlPack.warning?`<span style="display:block;font-size:10px;color:var(--no);margin-top:2px">⚠ ${urlPack.warning}</span>`:'';
+    content=`<div class="card" style="max-width:380px;width:100%;padding:22px" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="color:var(--ac)">${IC.share}</div><h3 style="font-size:17px;font-weight:700">Synchroniser</h3></div>
+      <p style="font-size:12px;color:var(--tm);margin-bottom:4px">Partagez vos dépenses · ${sizeInfo}</p>
+      <div class="sync-choice">
+        <div class="sync-opt ${qrOk?'':'disabled'}" id="syncOptQR" style="${qrOk?'':'opacity:.4;pointer-events:none'}">
+          <div class="ico" style="background:var(--acs);color:var(--ac)">${IC.qr}</div>
+          <div><h4>Afficher mon QR code</h4><p>${qrOk?'L\'autre téléphone scanne votre écran':'Trop de données — soldez d\'abord'}${qrWarn}</p></div>
+        </div>
+        <div class="sync-opt" id="syncOptScan">
+          <div class="ico" style="background:rgba(45,212,160,.12);color:var(--ok)">${IC.cam}</div>
+          <div><h4>Scanner un QR code</h4><p>Ouvrir la caméra pour lire le code</p></div>
+        </div>
+        <div class="sync-opt ${urlOk?'':'disabled'}" id="syncOptLink" style="${urlOk?'':'opacity:.4;pointer-events:none'}">
+          <div class="ico" style="background:rgba(248,113,113,.12);color:var(--no)">${IC.link}</div>
+          <div><h4>Partager un lien</h4><p>${urlOk?'Envoyer par SMS, WhatsApp, email…':'Trop de données — soldez d\'abord'}${urlWarn}</p></div>
+        </div>
+      </div>
+      <button class="btn-g" style="width:100%;margin-top:14px" id="syncClose">Fermer</button>
+    </div>`;
+  }
+  return`<div class="modal-bg" style="z-index:55" id="syncBg">${content}</div>`;
+}
+
 function renderMain(){
-  const{unsettled:u,bal:b,totalU:tot}=calcBalance();
+  const{u,b,tot}=calcBal();
   const deb=b>0?1:0,cred=b>0?0:1,ab=Math.abs(b);
   const sorted=[...u].sort((a,c)=>c.dt.localeCompare(a.dt)||(c.ca||'').localeCompare(a.ca||''));
 
-  let balCard;
-  if(b===0){
-    balCard=`<div class="card" style="padding:18px;margin-bottom:16px;text-align:center"><div style="font-size:13px;color:var(--ok);font-weight:700;margin-bottom:3px">✓ Tout est équilibré</div><div style="font-size:11px;color:var(--tm)">Aucune dette en cours</div></div>`;
-  }else{
-    balCard=`<div class="card" style="padding:18px;margin-bottom:16px;background:linear-gradient(135deg,var(--sf),${(b>0?'var(--ok)':'var(--no)')}0d)">
-      <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Balance</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
-        <span style="font-size:15px;font-weight:600;color:var(--no)">${esc(state.names[deb])}</span>
-        <div style="display:flex;align-items:center;gap:5px">${ic.arrow}<span style="font-size:24px;font-weight:800;color:var(--ac);letter-spacing:-.02em">${fmt(ab)}</span>${ic.arrow}</div>
-        <span style="font-size:15px;font-weight:600;color:var(--ok)">${esc(state.names[cred])}</span>
-      </div>
-      <button id="settleBtn" style="background:rgba(45,212,160,.1);color:var(--ok);border:1px solid rgba(45,212,160,.25);border-radius:9px;padding:9px;width:100%;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px">${ic.check('var(--ok)',14)} Marquer comme payé</button>
-    </div>`;
-  }
+  let bal;
+  if(b===0)bal=`<div class="card" style="padding:18px;margin-bottom:16px;text-align:center"><div style="font-size:13px;color:var(--ok);font-weight:700;margin-bottom:3px">✓ Tout est équilibré</div><div style="font-size:11px;color:var(--tm)">Aucune dette en cours</div></div>`;
+  else bal=`<div class="card" style="padding:18px;margin-bottom:16px;background:linear-gradient(135deg,var(--sf),${b>0?'rgba(45,212,160,.05)':'rgba(248,113,113,.05)'})">
+    <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Balance</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600;color:var(--no)">${esc(S.names[deb])}</span><div style="display:flex;align-items:center;gap:5px;color:var(--tm)">${IC.arrow}<span style="font-size:24px;font-weight:800;color:var(--ac)">${fmt(ab)}</span>${IC.arrow}</div><span style="font-size:15px;font-weight:600;color:var(--ok)">${esc(S.names[cred])}</span></div>
+    <button id="settleBtn" style="background:rgba(45,212,160,.1);color:var(--ok);border:1px solid rgba(45,212,160,.25);border-radius:9px;padding:9px;width:100%;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:5px">${IC.check} Marquer comme payé</button>
+  </div>`;
 
-  let stats='';
-  if(u.length>0){
-    stats=`<div style="display:flex;gap:8px;margin-bottom:16px">
-      ${[['Dépenses',u.length],['Total',fmt(tot)],['Règlements',state.settlements.length]].map(([l,v])=>`<div class="card" style="flex:1;padding:10px 12px;margin-bottom:0"><div style="font-size:10px;color:var(--tm);margin-bottom:1px">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('')}
-    </div>`;
-  }
+  let stats='';if(u.length)stats=`<div style="display:flex;gap:8px;margin-bottom:16px">${[['Dépenses',u.length],['Total',fmt(tot)],['Règlements',S.settlements.length]].map(([l,v])=>`<div class="card" style="flex:1;padding:10px 12px;margin-bottom:0"><div style="font-size:10px;color:var(--tm);margin-bottom:1px">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('')}</div>`;
 
   let list;
-  if(sorted.length===0){
-    list=`<div class="card" style="text-align:center;padding:36px 20px;color:var(--tm)"><p style="font-size:13px;margin-bottom:3px">Aucune dépense</p><p style="font-size:11px">Appuyez sur + pour commencer</p></div>`;
-  }else{
-    list=sorted.map(x=>`<div class="card" style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
-      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(state.names[x.p])}</span></div></div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span>
-        <button class="edit-btn" data-id="${x.id}" style="background:none;border:none;cursor:pointer;padding:3px;display:flex">${ic.edit}</button>
-        <button class="del-btn" data-id="${x.id}" style="background:none;border:none;cursor:pointer;padding:3px;display:flex">${ic.trash}</button>
-      </div>
-    </div>`).join('');
-  }
+  if(!sorted.length)list=`<div class="card" style="text-align:center;padding:36px 20px;color:var(--tm)"><p style="font-size:13px;margin-bottom:3px">Aucune dépense</p><p style="font-size:11px">Appuyez sur + pour commencer</p></div>`;
+  else list=sorted.map(x=>`<div class="card exp-row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(S.names[x.p])}</span></div></div><div class="actions"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span><button data-edit="${x.id}">${IC.edit}</button><button data-del="${x.id}">${IC.trash}</button></div></div>`).join('');
 
-  let toastH=state.toast?`<div class="toast">${esc(state.toast)}</div>`:'';
-  let settleModal='';
-  if(state.confirmSettle){
-    settleModal=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()">
-      <h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3>
-      <p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(state.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(state.names[cred])}</b></p>
-      <p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro. Les dépenses restent dans l'historique.</p>
-      <div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div>
-    </div></div>`;
-  }
-  let delModal='';
-  if(state.confirmDel){
-    delModal=`<div class="modal-bg" id="delModalBg"><div class="card" style="max-width:320px;width:100%;padding:22px" onclick="event.stopPropagation()">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Supprimer cette dépense ?</h3>
-      <div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelDel">Annuler</button><button class="btn-p" style="flex:1;background:var(--no)" id="doDel">Supprimer</button></div>
-    </div></div>`;
-  }
+  let modals='';
+  if(S.confirmSettle)modals+=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3><p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(S.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(S.names[cred])}</b></p><p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro.<br>Les dépenses restent dans l'historique.</p><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div></div></div>`;
+  if(S.confirmDel)modals+=`<div class="modal-bg" id="delBg"><div class="card" style="max-width:320px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Supprimer cette dépense ?</h3><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelDel">Annuler</button><button class="btn-p" style="flex:1;background:var(--no)" id="doDel">Supprimer</button></div></div></div>`;
 
-  return`${toastH}${settleModal}${delModal}
-  <div style="padding:18px 24px 110px">
+  return`${modals}<div style="padding:18px 24px 110px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
-      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em">DuoSplit</h1><p style="font-size:11px;color:var(--tm);margin-top:1px">${esc(state.names[0])} & ${esc(state.names[1])} · ${state.ratio[0]}/${state.ratio[1]}</p></div>
-      <div style="display:flex;gap:7px">
-        <button id="goHist" style="background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex">${ic.clock}</button>
-        <button id="goSett" style="background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex">${ic.gear}</button>
-      </div>
-    </div>
-    ${balCard}${stats}
-    <h2 style="font-size:12px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Dépenses en cours</h2>
-    ${list}
-  </div>
-  <button class="fab" id="addBtn">${ic.plus}</button>`;
+      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em">DuoSplit</h1><p style="font-size:11px;color:var(--tm);margin-top:1px">${esc(S.names[0])} & ${esc(S.names[1])} · ${S.ratio[0]}/${S.ratio[1]}</p></div>
+      <div style="display:flex;gap:7px"><button class="hdr-btn" id="shareBtn" title="Synchroniser" style="color:var(--ac)">${IC.share}</button><button class="hdr-btn" id="goHist" style="color:var(--ts)">${IC.clock}</button><button class="hdr-btn" id="goSett" style="color:var(--ts)">${IC.gear}</button></div>
+    </div>${bal}${stats}
+    <h2 style="font-size:12px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Dépenses en cours</h2>${list}
+  </div><button class="fab" id="addBtn">${IC.plus}</button>`;
 }
 
-// ─── Event binding ─────────────────────────────────────────────
-function bindEvents(){
-  // Setup
-  on('n0','input',e=>{state.names=[e.target.value,state.names[1]];render()});
-  on('n1','input',e=>{state.names=[state.names[0],e.target.value];render()});
-  on('ratio','input',e=>{const v=Math.max(0,Math.min(100,parseInt(e.target.value)||0));state.ratio=[v,100-v];render()});
-  on('goMain','click',()=>{if(state.names[0].trim()&&state.names[1].trim()){state.view='main';persist();flash("C'est parti !")}});
-  // Nav
-  on('back','click',()=>{state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.expandedS=null;state.view='main';render()});
-  on('goHist','click',()=>{state.view='history';render()});
-  on('goSett','click',()=>{state.view='settings';render()});
-  on('saveSett','click',()=>{if(state.names[0].trim()&&state.names[1].trim()){persist();state.view='main';flash('Sauvegardé ✓')}});
-  // Add
-  on('addBtn','click',()=>{state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.view='add';render()});
-  on('fLabel','input',e=>{state.fLabel=e.target.value});
-  on('fAmt','input',e=>{state.fAmt=e.target.value});
-  on('fDate','input',e=>{state.fDate=e.target.value});
-  document.querySelectorAll('.payer-btn').forEach(b=>b.addEventListener('click',()=>{state.fPayer=parseInt(b.dataset.i);render()}));
-  on('saveExp','click',()=>{
-    const a=parseFloat((state.fAmt||'0').replace(',','.'))||0;
-    if(!state.fLabel.trim()||a<=0)return;
-    if(state.editId){state.expenses=state.expenses.map(e=>e.id===state.editId?{...e,l:state.fLabel.trim(),a,dt:state.fDate,p:state.fPayer}:e);flash('Modifiée ✓')}
-    else{state.expenses.push({id:Date.now().toString(),l:state.fLabel.trim(),a,dt:state.fDate,p:state.fPayer,ca:new Date().toISOString()});flash('Ajoutée ✓')}
-    state.fLabel='';state.fAmt='';state.fDate=today();state.fPayer=0;state.editId=null;state.view='main';persist();
+// ═══════════════════════════════════════════════════════════════
+//  BIND — text inputs do NOT trigger re-render (keyboard fix)
+// ═══════════════════════════════════════════════════════════════
+function bind(){
+  document.querySelectorAll('[data-f]').forEach(inp=>{
+    const f=inp.dataset.f;
+    inp.addEventListener('input',()=>{
+      if(f==='n0'){S.names=[inp.value,S.names[1]];microLabels()}
+      else if(f==='n1'){S.names=[S.names[0],inp.value];microLabels()}
+      else if(f==='ratio'){const v=Math.max(0,Math.min(100,parseInt(inp.value)||0));S.ratio=[v,100-v];microRatio(v)}
+      else if(f==='fLabel')S.fLabel=inp.value;
+      else if(f==='fAmt'){S.fAmt=inp.value;microSplit()}
+      else if(f==='fDate')S.fDate=inp.value;
+      microBtns();
+    });
   });
-  // Edit/Delete
-  document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{
-    e.stopPropagation();const x=state.expenses.find(ex=>ex.id===b.dataset.id);
-    if(x){state.fLabel=x.l;state.fAmt=String(x.a);state.fDate=x.dt;state.fPayer=x.p;state.editId=x.id;state.view='add';render()}
-  }));
-  document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();state.confirmDel=b.dataset.id;render()}));
-  on('cancelDel','click',()=>{state.confirmDel=null;render()});
-  on('doDel','click',()=>{state.expenses=state.expenses.filter(e=>e.id!==state.confirmDel);state.confirmDel=null;persist();flash('Supprimée')});
-  on('delModalBg','click',()=>{state.confirmDel=null;render()});
-  // Settle
-  on('settleBtn','click',()=>{state.confirmSettle=true;render()});
-  on('cancelSettle','click',()=>{state.confirmSettle=false;render()});
-  on('modalBg','click',()=>{state.confirmSettle=false;render()});
-  on('doSettle','click',()=>{
-    const{unsettled:u,bal:b}=calcBalance();
-    if(b===0)return;
-    state.settlements.push({id:Date.now().toString(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});
-    state.confirmSettle=false;persist();flash('Soldé ✓');
+  clk('goMain',()=>{if(S.names[0].trim()&&S.names[1].trim()){S.view='main';persist();flash("C'est parti !",'ok')}});
+  clk('back',()=>{stopScan();S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.expandedS=null;S.view='main';render()});
+  clk('goHist',()=>{S.view='history';render()});
+  clk('goSett',()=>{S.view='settings';render()});
+  clk('saveSett',()=>{if(S.names[0].trim()&&S.names[1].trim()){persist();S.view='main';flash('Sauvegardé ✓','ok')}});
+  clk('addBtn',()=>{S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.view='add';render()});
+
+  // ── Sync panel ──
+  clk('shareBtn',()=>{S.showSync=true;S.syncView='menu';render()});
+  clk('syncClose',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
+  clk('syncBg',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
+  clk('syncBackMenu',()=>{stopScan();S.syncView='menu';render()});
+  clk('syncOptQR',()=>{S.syncView='qr';render()});
+  clk('syncOptScan',()=>{S.syncView='scan';render()});
+  clk('syncOptLink',()=>{S.showSync=false;S.syncView=null;render();shareLink()});
+
+  // ── Sync accept/reject ──
+  clk('syncYes',()=>{if(!S.pendingSync)return;const m=mergeData({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements},S.pendingSync);S.names=m.n;S.ratio=m.r;S.expenses=m.e;S.settlements=m.s;S.pendingSync=null;persist();flash('Synchronisé ✓','ok')});
+  clk('syncNo',()=>{S.pendingSync=null;render()});
+
+  // ── Payer buttons ──
+  document.querySelectorAll('.payer-btn').forEach(b=>b.addEventListener('click',()=>{S.fPayer=parseInt(b.dataset.i);render()}));
+
+  // ── Save expense ──
+  clk('saveExp',()=>{
+    const a=parseFloat((S.fAmt||'0').replace(',','.'))||0;if(!S.fLabel.trim()||a<=0)return;
+    if(S.editId)S.expenses=S.expenses.map(e=>e.id===S.editId?{...e,l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer}:e);
+    else S.expenses.push({id:uid(),l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer,ca:new Date().toISOString()});
+    const msg=S.editId?'Modifiée ✓':'Ajoutée ✓';
+    S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.view='main';persist();flash(msg,'ok');
   });
-  // History expand
-  document.querySelectorAll('.settle-card').forEach(c=>c.addEventListener('click',()=>{
-    state.expandedS=state.expandedS===c.dataset.id?null:c.dataset.id;render();
-  }));
+
+  // ── Edit / Delete ──
+  document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const x=S.expenses.find(ex=>ex.id===b.dataset.edit);if(x){S.fLabel=x.l;S.fAmt=String(x.a);S.fDate=x.dt;S.fPayer=x.p;S.editId=x.id;S.view='add';render()}}));
+  document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();S.confirmDel=b.dataset.del;render()}));
+  clk('cancelDel',()=>{S.confirmDel=null;render()});
+  clk('doDel',()=>{S.expenses=S.expenses.filter(e=>e.id!==S.confirmDel);S.confirmDel=null;persist();flash('Supprimée','')});
+  clk('delBg',()=>{S.confirmDel=null;render()});
+
+  // ── Settle ──
+  clk('settleBtn',()=>{S.confirmSettle=true;render()});
+  clk('cancelSettle',()=>{S.confirmSettle=false;render()});
+  clk('modalBg',()=>{S.confirmSettle=false;render()});
+  clk('doSettle',()=>{const{u,b}=calcBal();if(b===0)return;S.settlements.push({id:uid(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});S.confirmSettle=false;persist();flash('Soldé ✓','ok')});
+
+  // ── History ──
+  document.querySelectorAll('.stog').forEach(c=>c.addEventListener('click',()=>{S.expandedS=S.expandedS===c.dataset.id?null:c.dataset.id;render()}));
 }
 
-function on(id,ev,fn){const el=document.getElementById(id);if(el)el.addEventListener(ev,fn)}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function clk(id,fn){const el=$(id);if(el)el.addEventListener('click',fn)}
+function microLabels(){const a=$('rn0'),b=$('rn1');if(a)a.textContent=S.names[0]||'Pers. 1';if(b)b.textContent=S.names[1]||'Pers. 2'}
+function microRatio(v){const a=$('r0'),b=$('r1');if(a)a.textContent=v+'%';if(b)b.textContent=(100-v)+'%'}
+function microSplit(){const el=$('splitP');if(!el)return;const pa=parseFloat((S.fAmt||'0').replace(',','.'))||0;if(pa>0)el.innerHTML=`<span>${esc(S.names[0])}: ${fmt(pa*S.ratio[0]/100)}</span><span>${esc(S.names[1])}: ${fmt(pa*S.ratio[1]/100)}</span>`}
+function microBtns(){const g=$('goMain')||$('saveSett');if(g)g.disabled=!(S.names[0].trim()&&S.names[1].trim());const s=$('saveExp');if(s){const pa=parseFloat((S.fAmt||'0').replace(',','.'))||0;s.disabled=!(S.fLabel.trim()&&pa>0)}}
 
-// ─── Init ──────────────────────────────────────────────────────
+// ─── Boot ──────────────────────────────────────────────────────
 render();
-
-// ─── Service Worker Registration ───────────────────────────────
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
 </html>
