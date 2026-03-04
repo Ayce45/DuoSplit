@@ -153,8 +153,7 @@ function copyUrl(u){navigator.clipboard.writeText(u).then(()=>flash('Lien copié
 // ─── QR Code Sync ──────────────────────────────────────────────
 let scanStream=null;let scanAnim=null;
 
-function showQR(){
-  S.syncView='qr';render();
+function generateQR(){
   const container=$('qrCanvas');
   if(!container)return;
   container.innerHTML='';
@@ -171,17 +170,44 @@ function showQR(){
   else if(note)note.textContent=`${S.expenses.length} dépense${S.expenses.length>1?'s':''} · ${S.settlements.length} règlement${S.settlements.length>1?'s':''}`;
 }
 
-async function startScan(){
-  S.syncView='scan';render();
+async function initCamera(){
   const video=$('scanVideo');
   if(!video)return;
+  
+  // Check if getUserMedia is available (iOS standalone PWA support)
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    flash("Caméra non supportée",'no');
+    S.syncView='menu';render();return;
+  }
+  
+  // Pre-check permission state if available
   try{
-    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:640}}});
+    if(navigator.permissions&&navigator.permissions.query){
+      const perm=await navigator.permissions.query({name:'camera'}).catch(()=>null);
+      if(perm&&perm.state==='denied'){
+        flash("Caméra bloquée dans les réglages",'no');
+        S.syncView='menu';render();return;
+      }
+    }
+  }catch{}
+  
+  try{
+    // Use constraints that work across iOS Safari, Android Chrome, desktop
+    const constraints={video:{facingMode:{ideal:'environment'}}};
+    scanStream=await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject=scanStream;
+    // iOS requires explicit play() after srcObject is set
+    video.setAttribute('playsinline','');
+    video.setAttribute('autoplay','');
+    video.muted=true;
     await video.play();
     scanFrame(video);
   }catch(e){
-    flash("Caméra refusée",'no');
+    stopScan();
+    const msg=e.name==='NotAllowedError'?'Autorisez la caméra dans les réglages':
+              e.name==='NotFoundError'?'Aucune caméra trouvée':
+              'Caméra non disponible ('+e.name+')';
+    flash(msg,'no');
     S.syncView='menu';render();
   }
 }
@@ -282,9 +308,6 @@ function render(){
   else html+=renderMain();
   $('app').innerHTML=html;
   bind();
-  // Post-render hooks
-  if(S.showSync&&S.syncView==='qr')setTimeout(showQR,50);
-  if(S.showSync&&S.syncView==='scan')setTimeout(startScan,50);
 }
 
 function renderSetup(){
@@ -383,7 +406,7 @@ function renderSyncPanel(){
       </div>
       <p style="font-size:12px;color:var(--ts);text-align:center;margin-bottom:10px">Pointez vers le QR code de l'autre téléphone</p>
       <div class="scan-frame">
-        <video id="scanVideo" autoplay playsinline muted></video>
+        <video id="scanVideo" autoplay playsinline webkit-playsinline muted></video>
         <div class="scan-overlay"><div class="scan-box"></div></div>
       </div>
       <button class="btn-g" style="width:100%;margin-top:12px" id="syncClose">Annuler</button>
@@ -482,8 +505,8 @@ function bind(){
   clk('syncClose',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
   clk('syncBg',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
   clk('syncBackMenu',()=>{stopScan();S.syncView='menu';render()});
-  clk('syncOptQR',()=>{S.syncView='qr';render()});
-  clk('syncOptScan',()=>{S.syncView='scan';render()});
+  clk('syncOptQR',()=>{S.syncView='qr';render();setTimeout(generateQR,50)});
+  clk('syncOptScan',()=>{S.syncView='scan';render();setTimeout(initCamera,100)});
   clk('syncOptLink',()=>{S.showSync=false;S.syncView=null;render();shareLink()});
 
   // ── Sync accept/reject ──
