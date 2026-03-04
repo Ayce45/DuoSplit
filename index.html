@@ -50,9 +50,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 .sync-opt p{font-size:11px;color:var(--tm);margin:0}
 #qrCanvas{display:flex;align-items:center;justify-content:center;margin:16px auto;background:#fff;border-radius:12px;padding:12px}
 #qrCanvas canvas,#qrCanvas img{border-radius:4px}
-#scanVideo{width:100%;border-radius:12px;background:#000;display:block}
-.scan-frame{position:relative;margin:16px 0}
-.scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#scanVideo{display:block}
 .scan-box{width:200px;height:200px;border:3px solid var(--ac);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{border-color:var(--ac)}50%{border-color:var(--acl)}}
 @keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -76,7 +74,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 // ─── Storage ───────────────────────────────────────────────────
 const KEY='duosplit';
 const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}};
-let _st;function persist(){clearTimeout(_st);_st=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements}))}catch{}},150)}
+let _st;function persist(){clearTimeout(_st);_st=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements,m:S.me}))}catch{}},150)}
 
 // ─── Size limits ───────────────────────────────────────────────
 // ─── Size limits ───────────────────────────────────────────────
@@ -196,9 +194,6 @@ async function initCamera(){
     const constraints={video:{facingMode:{ideal:'environment'}}};
     scanStream=await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject=scanStream;
-    // iOS requires explicit play() after srcObject is set
-    video.setAttribute('playsinline','');
-    video.setAttribute('autoplay','');
     video.muted=true;
     await video.play();
     scanFrame(video);
@@ -274,10 +269,10 @@ const IC={
 };
 
 // ─── State ─────────────────────────────────────────────────────
-let S={names:['',''],ratio:[50,50],expenses:[],settlements:[],view:'setup',editId:null,fLabel:'',fAmt:'',fDate:today(),fPayer:0,confirmSettle:false,confirmDel:null,toast:null,toastType:'',expandedS:null,pendingSync:null,showSync:false,syncView:null};
+let S={names:['',''],ratio:[50,50],expenses:[],settlements:[],view:'setup',editId:null,fLabel:'',fAmt:'',fDate:today(),fPayer:0,me:0,confirmSettle:false,confirmDel:null,toast:null,toastType:'',expandedS:null,pendingSync:null,showSync:false,syncView:null};
 
 const stored=load();
-if(stored){S.names=stored.n||['',''];S.ratio=stored.r||[50,50];S.expenses=stored.e||[];S.settlements=stored.s||[];if(S.names[0]&&S.names[1])S.view='main'}
+if(stored){S.names=stored.n||['',''];S.ratio=stored.r||[50,50];S.expenses=stored.e||[];S.settlements=stored.s||[];S.me=stored.m||0;if(S.names[0]&&S.names[1])S.view='main'}
 
 // Check URL for incoming sync
 (function(){const h=window.location.hash;if(h.startsWith('#sync=')){const r=decodeData(h.slice(6));if(r)S.pendingSync=r;history.replaceState(null,'',window.location.pathname+window.location.search)}})();
@@ -318,6 +313,9 @@ function renderSetup(){
   <p style="color:var(--ts);font-size:13px;margin-bottom:36px;text-align:center">Partage de dépenses à deux,<br>simple et clair.</p>
   <div style="width:100%;margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" data-f="n0" placeholder="Prénom…" value="${esc(S.names[0])}"></div>
   <div style="width:100%;margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" data-f="n1" placeholder="Prénom…" value="${esc(S.names[1])}"></div>
+  <div style="width:100%;margin-bottom:26px"><label class="lbl">Je suis</label>
+    <div style="display:flex;gap:10px">${[0,1].map(i=>`<button class="payer-btn ${S.me===i?'on':'off'}" data-me="${i}">${esc(S.names[i])||'Pers. '+(i+1)}</button>`).join('')}</div>
+  </div>
   <div style="width:100%;margin-bottom:32px"><label class="lbl">Ratio de partage</label>
     <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
       <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)" id="r0">${S.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)" id="rn0">${esc(S.names[0])||'Pers. 1'}</div></div>
@@ -334,6 +332,10 @@ function renderSettings(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">Paramètres</h2><div style="width:78px"></div></div>
   <div style="margin-bottom:18px"><label class="lbl">Personne 1</label><input class="inp" data-f="n0" value="${esc(S.names[0])}"></div>
   <div style="margin-bottom:26px"><label class="lbl">Personne 2</label><input class="inp" data-f="n1" value="${esc(S.names[1])}"></div>
+  <div style="margin-bottom:26px"><label class="lbl">Je suis</label>
+    <div style="display:flex;gap:10px">${S.names.map((n,i)=>`<button class="payer-btn ${S.me===i?'on':'off'}" data-me="${i}">${esc(n)||'Pers. '+(i+1)}</button>`).join('')}</div>
+    <p style="font-size:11px;color:var(--tm);margin-top:6px">Présélectionné comme payeur par défaut</p>
+  </div>
   <div style="margin-bottom:30px"><label class="lbl">Ratio de partage</label>
     <div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:0">
       <div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--ac)" id="r0">${S.ratio[0]}%</div><div style="font-size:11px;color:var(--ts)" id="rn0">${esc(S.names[0])}</div></div>
@@ -349,7 +351,7 @@ function renderSettings(){
 function renderAdd(){
   const pa=parseFloat((S.fAmt||'0').replace(',','.'))||0;const ok=S.fLabel.trim()&&pa>0;
   let split='';
-  if(ok)split=`<div class="card" style="background:var(--acs);border:1px solid rgba(124,107,240,.2);margin-bottom:18px"><div style="font-size:11px;color:var(--ts);margin-bottom:6px">Répartition</div><div style="display:flex;justify-content:space-between;font-size:14px" id="splitP"><span>${esc(S.names[0])}: ${fmt(pa*S.ratio[0]/100)}</span><span>${esc(S.names[1])}: ${fmt(pa*S.ratio[1]/100)}</span></div></div>`;
+  if(pa>0)split=`<div class="card" style="background:var(--acs);border:1px solid rgba(124,107,240,.2);margin-bottom:18px"><div style="font-size:11px;color:var(--ts);margin-bottom:6px">Répartition · payé par <b style="color:var(--ac)">${esc(S.names[S.fPayer])}</b></div><div style="display:flex;justify-content:space-between;font-size:14px" id="splitP"><span>${esc(S.names[0])}: ${fmt(pa*S.ratio[0]/100)}</span><span>${esc(S.names[1])}: ${fmt(pa*S.ratio[1]/100)}</span></div></div>`;
   return`<div style="padding:18px 24px">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">${S.editId?'Modifier':'Nouvelle dépense'}</h2><div style="width:78px"></div></div>
   <div style="margin-bottom:18px"><label class="lbl">Intitulé</label><input class="inp" data-f="fLabel" placeholder="Courses, resto, loyer…" value="${esc(S.fLabel)}"></div>
@@ -405,9 +407,9 @@ function renderSyncPanel(){
         <h3 style="font-size:16px;font-weight:700">Scanner un QR</h3><div style="width:70px"></div>
       </div>
       <p style="font-size:12px;color:var(--ts);text-align:center;margin-bottom:10px">Pointez vers le QR code de l'autre téléphone</p>
-      <div class="scan-frame">
-        <video id="scanVideo" autoplay playsinline webkit-playsinline muted></video>
-        <div class="scan-overlay"><div class="scan-box"></div></div>
+      <div class="scan-frame" style="position:relative;width:100%;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#111">
+        <video id="scanVideo" autoplay playsinline webkit-playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px"></video>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div class="scan-box"></div></div>
       </div>
       <button class="btn-g" style="width:100%;margin-top:12px" id="syncClose">Annuler</button>
     </div>`;
@@ -494,11 +496,11 @@ function bind(){
     });
   });
   clk('goMain',()=>{if(S.names[0].trim()&&S.names[1].trim()){S.view='main';persist();flash("C'est parti !",'ok')}});
-  clk('back',()=>{stopScan();S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.expandedS=null;S.view='main';render()});
+  clk('back',()=>{stopScan();S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.expandedS=null;S.view='main';render()});
   clk('goHist',()=>{S.view='history';render()});
   clk('goSett',()=>{S.view='settings';render()});
   clk('saveSett',()=>{if(S.names[0].trim()&&S.names[1].trim()){persist();S.view='main';flash('Sauvegardé ✓','ok')}});
-  clk('addBtn',()=>{S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.view='add';render()});
+  clk('addBtn',()=>{S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.view='add';render()});
 
   // ── Sync panel ──
   clk('shareBtn',()=>{S.showSync=true;S.syncView='menu';render()});
@@ -513,6 +515,9 @@ function bind(){
   clk('syncYes',()=>{if(!S.pendingSync)return;const m=mergeData({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements},S.pendingSync);S.names=m.n;S.ratio=m.r;S.expenses=m.e;S.settlements=m.s;S.pendingSync=null;persist();flash('Synchronisé ✓','ok')});
   clk('syncNo',()=>{S.pendingSync=null;render()});
 
+  // ── Identity buttons (who am I) ──
+  document.querySelectorAll('[data-me]').forEach(b=>b.addEventListener('click',()=>{S.me=parseInt(b.dataset.me);S.fPayer=S.me;render()}));
+
   // ── Payer buttons ──
   document.querySelectorAll('.payer-btn').forEach(b=>b.addEventListener('click',()=>{S.fPayer=parseInt(b.dataset.i);render()}));
 
@@ -522,7 +527,7 @@ function bind(){
     if(S.editId)S.expenses=S.expenses.map(e=>e.id===S.editId?{...e,l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer}:e);
     else S.expenses.push({id:uid(),l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer,ca:new Date().toISOString()});
     const msg=S.editId?'Modifiée ✓':'Ajoutée ✓';
-    S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=0;S.editId=null;S.view='main';persist();flash(msg,'ok');
+    S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.view='main';persist();flash(msg,'ok');
   });
 
   // ── Edit / Delete ──
