@@ -78,9 +78,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 @keyframes aStaggerUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes aChevOpen{from{transform:rotate(0deg)}to{transform:rotate(180deg)}}
 @keyframes aChevClose{from{transform:rotate(180deg)}to{transform:rotate(0deg)}}
-#viewContent{animation:aFadeUp var(--dur-med) var(--ease-out) both}
+#viewContent.anim-in{animation:aFadeUp var(--dur-med) var(--ease-out) both}
 #viewContent.exit{animation:aFadeDown 180ms var(--ease-smooth) both}
-.exp-row.card{animation:aStaggerUp var(--dur-med) var(--ease-out) both}
+.exp-row.card.anim-in{animation:aStaggerUp var(--dur-med) var(--ease-out) both}
 .settle-detail{animation:aFadeUp 250ms var(--ease-out) both;overflow:hidden}
 .chev-anim{display:inline-block}
 .chev-anim.chev-open{animation:aChevOpen 250ms var(--ease-out) both}
@@ -325,12 +325,22 @@ let _tt;function flash(msg,type=''){S.toast=msg;S.toastType=type;render();clearT
 //  RENDER
 // ═══════════════════════════════════════════════════════════════
 let _prevView=null,_renderGen=0;
+function renderModals(){
+  let m='';
+  if(S.view==='main'){
+    const{u,b}=calcBal();const deb=b>0?1:0,cred=b>0?0:1,ab=Math.abs(b);
+    if(S.confirmSettle)m+=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3><p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(S.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(S.names[cred])}</b></p><p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro.<br>Les dépenses restent dans l'historique.</p><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div></div></div>`;
+    if(S.confirmDel)m+=`<div class="modal-bg" id="delBg"><div class="card" style="max-width:320px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Supprimer cette dépense ?</h3><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelDel">Annuler</button><button class="btn-p" style="flex:1;background:var(--no)" id="doDel">Supprimer</button></div></div></div>`;
+  }
+  return m;
+}
 function render(){
   const gen=++_renderGen;
   let overlay='';
   if(S.toast)overlay+=`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`;
   if(S.pendingSync&&S.view==='main')overlay+=renderSyncModal();
   if(S.showSync)overlay+=renderSyncPanel();
+  overlay+=renderModals();
   let viewHtml='';
   if(S.view==='setup')viewHtml=renderSetup();
   else if(S.view==='settings')viewHtml=renderSettings();
@@ -339,20 +349,25 @@ function render(){
   else viewHtml=renderMain();
   const viewChanged=_prevView!==null&&_prevView!==S.view;
   _prevView=S.view;
-  const fullHtml=overlay+`<div id="viewContent">${viewHtml}</div>`;
+  const fab=S.view==='main'?`<button class="fab" id="addBtn">${IC.plus}</button>`:'';
+  const fullHtml=overlay+`<div id="viewContent">${viewHtml}</div>`+fab;
   const vc=$('viewContent');
   if(viewChanged&&vc){
     vc.classList.add('exit');
-    let done=false;const finish=()=>{if(done||_renderGen!==gen)return;done=true;$('app').innerHTML=fullHtml;bind();staggerCards()};
+    let done=false;const finish=()=>{if(done||_renderGen!==gen)return;done=true;applyRender(fullHtml,true)};
     vc.addEventListener('animationend',finish,{once:true});
     setTimeout(finish,200);
   }else{
-    $('app').innerHTML=fullHtml;bind();
-    if(viewChanged)staggerCards();
+    applyRender(fullHtml,viewChanged);
   }
 }
-function staggerCards(){
-  document.querySelectorAll('#viewContent .card').forEach((c,i)=>{c.style.animationDelay=Math.min(i*40,200)+'ms'});
+function applyRender(html,animate){
+  $('app').innerHTML=html;bind();
+  if(animate){
+    const vc=$('viewContent');if(vc)vc.classList.add('anim-in');
+    document.querySelectorAll('#viewContent .exp-row.card').forEach((c,i)=>{c.classList.add('anim-in');c.style.animationDelay=Math.min(i*30,300)+'ms'});
+    document.querySelectorAll('#viewContent .card:not(.exp-row)').forEach((c,i)=>{c.style.animationDelay=Math.min(i*40,200)+'ms'});
+  }
 }
 
 function renderSetup(){
@@ -514,19 +529,15 @@ function renderMain(){
 
   let list;
   if(!sorted.length)list=`<div class="card" style="text-align:center;padding:36px 20px;color:var(--tm)"><p style="font-size:13px;margin-bottom:3px">Aucune dépense</p><p style="font-size:11px">Appuyez sur + pour commencer</p></div>`;
-  else list=sorted.map((x,i)=>`<div class="card exp-row" style="animation-delay:${Math.min(i*30,300)}ms"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(S.names[x.p])}</span></div></div><div class="actions"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span><button data-edit="${x.id}">${IC.edit}</button><button data-del="${x.id}">${IC.trash}</button></div></div>`).join('');
+  else list=sorted.map(x=>`<div class="card exp-row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(S.names[x.p])}</span></div></div><div class="actions"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span><button data-edit="${x.id}">${IC.edit}</button><button data-del="${x.id}">${IC.trash}</button></div></div>`).join('');
 
-  let modals='';
-  if(S.confirmSettle)modals+=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3><p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(S.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(S.names[cred])}</b></p><p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro.<br>Les dépenses restent dans l'historique.</p><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div></div></div>`;
-  if(S.confirmDel)modals+=`<div class="modal-bg" id="delBg"><div class="card" style="max-width:320px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Supprimer cette dépense ?</h3><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelDel">Annuler</button><button class="btn-p" style="flex:1;background:var(--no)" id="doDel">Supprimer</button></div></div></div>`;
-
-  return`${modals}<div style="padding:18px 24px 110px">
+  return`<div style="padding:18px 24px 110px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
       <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em">DuoSplit</h1><p style="font-size:11px;color:var(--tm);margin-top:1px">${esc(S.names[0])} & ${esc(S.names[1])} · ${S.ratio[0]}/${S.ratio[1]}</p></div>
       <div style="display:flex;gap:7px"><button class="hdr-btn" id="shareBtn" title="Synchroniser" style="color:var(--ac)">${IC.share}</button><button class="hdr-btn" id="goHist" style="color:var(--ts)">${IC.clock}</button><button class="hdr-btn" id="goSett" style="color:var(--ts)">${IC.gear}</button></div>
     </div>${bal}${stats}
     <h2 style="font-size:12px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Dépenses en cours</h2>${list}
-  </div><button class="fab" id="addBtn">${IC.plus}</button>`;
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
