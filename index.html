@@ -18,34 +18,46 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#0a0a0e;--sf:#141419;--bd:#262632;--ac:#7c6bf0;--acl:#b0a4ff;--acs:rgba(124,107,240,.13);--ok:#2dd4a0;--no:#f87171;--t:#ebebf0;--ts:#8585a0;--tm:#50506a}
+:root{--bg:#0a0a0e;--sf:#141419;--bd:#262632;--ac:#7c6bf0;--acl:#b0a4ff;--acs:rgba(124,107,240,.13);--ok:#2dd4a0;--no:#f87171;--t:#ebebf0;--ts:#8585a0;--tm:#50506a;--ease-out:cubic-bezier(.25,.46,.45,.94);--ease-spring:cubic-bezier(.175,.885,.32,1.275);--ease-smooth:cubic-bezier(.4,0,.2,1);--dur-fast:180ms;--dur-med:280ms;--dur-slow:400ms}
 html,body{height:100%;background:var(--bg);color:var(--t);font-family:'DM Sans',system-ui,sans-serif;overflow-x:hidden}
 input,button,select,textarea{font-family:inherit}
-input:focus{outline:none;border-color:var(--ac)!important}
+input:focus{outline:none;border-color:var(--ac)!important;box-shadow:0 0 0 3px rgba(124,107,240,.12)}
 input[type=range]{height:4px;accent-color:var(--ac)}
+input[type=range]:focus{box-shadow:none}
 input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 .app{max-width:460px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative}
 .card{background:var(--sf);border-radius:14px;border:1px solid var(--bd);padding:16px;margin-bottom:10px}
-.inp{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:13px 15px;color:var(--t);font-size:15px;width:100%;box-sizing:border-box}
+.inp{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:13px 15px;color:var(--t);font-size:15px;width:100%;box-sizing:border-box;transition:border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out)}
 .lbl{font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:block}
-.btn-p{background:var(--ac);color:#fff;border:none;border-radius:11px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%}
-.btn-g{background:transparent;color:var(--ts);border:1px solid var(--bd);border-radius:11px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer}
-.btn-p[disabled]{opacity:.35;pointer-events:none}
-.hdr-btn{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10}
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:tIn .3s;white-space:nowrap}
+.btn-p{background:var(--ac);color:#fff;border:none;border-radius:11px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%;transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) var(--ease-out),opacity var(--dur-fast) var(--ease-out)}
+.btn-p:active{transform:scale(.96)}
+.btn-g{background:transparent;color:var(--ts);border:1px solid var(--bd);border-radius:11px;padding:10px 18px;font-size:14px;font-weight:500;cursor:pointer;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.btn-g:active{transform:scale(.96)}
+.btn-p[disabled]{opacity:.35;pointer-events:none;transform:none}
+.hdr-btn{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.hdr-btn:active{transform:scale(.9)}
+.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;animation:aSpringIn 450ms var(--ease-spring) both 150ms;transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) var(--ease-out)}
+.fab:active{transform:translateX(-50%) scale(.9);box-shadow:0 2px 12px rgba(124,107,240,.25)}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:aTIn 400ms var(--ease-spring) both;white-space:nowrap}
+.toast.out{animation:aTOut 250ms var(--ease-smooth) both}
 .toast.ok{background:var(--ok)}.toast.no{background:var(--no)}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s}
-.payer-btn{flex:1;padding:13px;border-radius:11px;font-weight:600;font-size:15px;cursor:pointer;transition:all .15s;font-family:inherit}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn var(--dur-med) var(--ease-out) both;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-bg>.card{animation:aScaleIn var(--dur-med) var(--ease-spring) both 60ms}
+.modal-bg.closing{animation:fadeIn var(--dur-fast) var(--ease-smooth) both reverse}
+.modal-bg.closing>.card{animation:aScaleIn var(--dur-fast) var(--ease-smooth) both reverse}
+.payer-btn{flex:1;padding:13px;border-radius:11px;font-weight:600;font-size:15px;cursor:pointer;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) var(--ease-out),background var(--dur-med) var(--ease-out),color var(--dur-fast) var(--ease-out);font-family:inherit}
+.payer-btn:active{transform:scale(.96)}
 .payer-btn.on{border:2px solid var(--ac);background:var(--acs);color:var(--ac)}
 .payer-btn.off{border:2px solid var(--bd);background:transparent;color:var(--ts)}
 .exp-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px}
 .exp-row .actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.exp-row .actions button{background:none;border:none;cursor:pointer;padding:6px;display:flex;color:var(--ts);border-radius:8px;transition:all .15s}
+.exp-row .actions button{background:none;border:none;cursor:pointer;padding:6px;display:flex;color:var(--ts);border-radius:8px;transition:transform var(--dur-fast) var(--ease-spring),color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
+.exp-row .actions button:active{transform:scale(.85)}
 .exp-row .actions button:hover{color:var(--t);background:var(--acs)}
 .exp-row .actions button[data-del]:hover{color:var(--no);background:rgba(248,113,113,.12)}
 .sync-choice{display:flex;flex-direction:column;gap:10px;margin-top:16px}
-.sync-opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:all .15s;text-align:left}
+.sync-opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:12px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);text-align:left}
+.sync-opt:active{transform:scale(.98)}
 .sync-opt:hover,.sync-opt:active{border-color:var(--ac);background:var(--acs)}
 .sync-opt .ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sync-opt h4{font-size:14px;font-weight:600;margin-bottom:2px}
@@ -55,8 +67,27 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 #scanVideo{display:block}
 .scan-box{width:200px;height:200px;border:3px solid var(--ac);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{border-color:var(--ac)}50%{border-color:var(--acl)}}
-@keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes aFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes aFadeDown{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(8px)}}
+@keyframes aScaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes aSlideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes aSpringIn{0%{opacity:0;transform:translateX(-50%) scale(0)}60%{transform:translateX(-50%) scale(1.08)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes aTIn{0%{opacity:0;transform:translateX(-50%) translateY(-16px) scale(.9)}60%{transform:translateX(-50%) translateY(3px) scale(1.02)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes aTOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-12px)}}
+@keyframes aStaggerUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes aChevOpen{from{transform:rotate(0deg)}to{transform:rotate(180deg)}}
+@keyframes aChevClose{from{transform:rotate(180deg)}to{transform:rotate(0deg)}}
+#viewContent{animation:aFadeUp var(--dur-med) var(--ease-out) both}
+#viewContent.exit{animation:aFadeDown 180ms var(--ease-smooth) both}
+.exp-row.card{animation:aStaggerUp var(--dur-med) var(--ease-out) both}
+.settle-detail{animation:aFadeUp 250ms var(--ease-out) both;overflow:hidden}
+.chev-anim{display:inline-block}
+.chev-anim.chev-open{animation:aChevOpen 250ms var(--ease-out) both}
+#syncBg>.card{animation:aSlideUp var(--dur-slow) var(--ease-spring) both}
+#settleBtn{transition:transform var(--dur-fast) var(--ease-spring),background var(--dur-fast) var(--ease-out)}
+#settleBtn:active{transform:scale(.97)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 @media(display-mode:standalone){body{padding-top:env(safe-area-inset-top)}}
 </style>
 </head>
@@ -262,7 +293,7 @@ const IC={
   clock:svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
   gear:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'),
   arrow:svg('<path d="M5 12h14M12 5l7 7-7 7"/>',15),
-  chev:(flip)=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="transition:transform .2s;${flip?'transform:rotate(180deg)':''}"><path d="M6 9l6 6 6-6"/></svg>`,
+  chev:(flip)=>`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="chev-anim${flip?' chev-open':''}"><path d="M6 9l6 6 6-6"/></svg>`,
   share:svg('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'),
   merge:svg('<path d="M8 6l4 4 4-4"/><path d="M12 2v8"/><path d="M4 16c0-2 2-4 4-4h8c2 0 4 2 4 4"/><circle cx="12" cy="20" r="2"/>',20),
   qr:svg('<rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4" rx="1"/><line x1="22" y1="14" x2="22" y2="22"/><line x1="14" y1="22" x2="22" y2="22"/>'),
@@ -288,23 +319,40 @@ function calcBal(){
 }
 
 // ─── Toast ─────────────────────────────────────────────────────
-let _tt;function flash(msg,type=''){S.toast=msg;S.toastType=type;render();clearTimeout(_tt);_tt=setTimeout(()=>{S.toast=null;render()},2200)}
+let _tt;function flash(msg,type=''){S.toast=msg;S.toastType=type;render();clearTimeout(_tt);_tt=setTimeout(()=>{const t=document.querySelector('.toast');if(t){t.classList.add('out');setTimeout(()=>{S.toast=null;render()},260)}else{S.toast=null;render()}},2200)}
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════════════
+let _prevView=null,_renderGen=0;
 function render(){
-  let html='';
-  if(S.toast)html+=`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`;
-  if(S.pendingSync&&S.view==='main')html+=renderSyncModal();
-  if(S.showSync)html+=renderSyncPanel();
-  if(S.view==='setup')html+=renderSetup();
-  else if(S.view==='settings')html+=renderSettings();
-  else if(S.view==='add')html+=renderAdd();
-  else if(S.view==='history')html+=renderHistory();
-  else html+=renderMain();
-  $('app').innerHTML=html;
-  bind();
+  const gen=++_renderGen;
+  let overlay='';
+  if(S.toast)overlay+=`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`;
+  if(S.pendingSync&&S.view==='main')overlay+=renderSyncModal();
+  if(S.showSync)overlay+=renderSyncPanel();
+  let viewHtml='';
+  if(S.view==='setup')viewHtml=renderSetup();
+  else if(S.view==='settings')viewHtml=renderSettings();
+  else if(S.view==='add')viewHtml=renderAdd();
+  else if(S.view==='history')viewHtml=renderHistory();
+  else viewHtml=renderMain();
+  const viewChanged=_prevView!==null&&_prevView!==S.view;
+  _prevView=S.view;
+  const fullHtml=overlay+`<div id="viewContent">${viewHtml}</div>`;
+  const vc=$('viewContent');
+  if(viewChanged&&vc){
+    vc.classList.add('exit');
+    let done=false;const finish=()=>{if(done||_renderGen!==gen)return;done=true;$('app').innerHTML=fullHtml;bind();staggerCards()};
+    vc.addEventListener('animationend',finish,{once:true});
+    setTimeout(finish,200);
+  }else{
+    $('app').innerHTML=fullHtml;bind();
+    if(viewChanged)staggerCards();
+  }
+}
+function staggerCards(){
+  document.querySelectorAll('#viewContent .card').forEach((c,i)=>{c.style.animationDelay=Math.min(i*40,200)+'ms'});
 }
 
 function renderSetup(){
@@ -370,7 +418,7 @@ function renderHistory(){
   if(!S.settlements.length)items=`<div style="text-align:center;padding:50px 20px;color:var(--tm)">${svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',36)}<p style="margin-top:14px;font-size:13px">Aucun règlement.</p></div>`;
   else items=[...S.settlements].reverse().map(s=>{
     const ex=S.expandedS===s.id;let det='';
-    if(ex&&s.ex)det=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${s.ex.length} dépense${s.ex.length>1?'s':''} — Total ${fmt(s.ex.reduce((a,e)=>a+e.a,0))}</div>${s.ex.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ts)"><span>${esc(e.l)} <span style="color:var(--tm)">(${esc(S.names[e.p])})</span></span><span>${fmt(e.a)}</span></div>`).join('')}</div>`;
+    if(ex&&s.ex)det=`<div class="settle-detail" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${s.ex.length} dépense${s.ex.length>1?'s':''} — Total ${fmt(s.ex.reduce((a,e)=>a+e.a,0))}</div>${s.ex.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--ts)"><span>${esc(e.l)} <span style="color:var(--tm)">(${esc(S.names[e.p])})</span></span><span>${fmt(e.a)}</span></div>`).join('')}</div>`;
     return`<div class="card stog" data-id="${s.id}" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--ts);margin-bottom:3px">${fmtD(s.d)}</div><div style="font-size:14px;font-weight:600"><span style="color:var(--no)">${esc(S.names[s.f])}</span><span style="color:var(--tm);margin:0 5px">→</span><span style="color:var(--ok)">${esc(S.names[s.t])}</span></div></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:17px;font-weight:700">${fmt(s.a)}</span><span style="display:flex;color:var(--tm)">${IC.chev(ex)}</span></div></div>${det}</div>`;
   }).join('');
   return`<div style="padding:18px 24px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px"><button class="btn-g" style="padding:8px 14px" id="back">← Retour</button><h2 style="font-size:17px;font-weight:700">Historique</h2><div style="width:78px"></div></div>${items}</div>`;
@@ -466,7 +514,7 @@ function renderMain(){
 
   let list;
   if(!sorted.length)list=`<div class="card" style="text-align:center;padding:36px 20px;color:var(--tm)"><p style="font-size:13px;margin-bottom:3px">Aucune dépense</p><p style="font-size:11px">Appuyez sur + pour commencer</p></div>`;
-  else list=sorted.map(x=>`<div class="card exp-row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(S.names[x.p])}</span></div></div><div class="actions"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span><button data-edit="${x.id}">${IC.edit}</button><button data-del="${x.id}">${IC.trash}</button></div></div>`).join('');
+  else list=sorted.map((x,i)=>`<div class="card exp-row" style="animation-delay:${Math.min(i*30,300)}ms"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">${esc(x.l)}</div><div style="font-size:11px;color:var(--tm)">${fmtD(x.dt)} · <span style="color:var(--ts)">${esc(S.names[x.p])}</span></div></div><div class="actions"><span style="font-size:16px;font-weight:700;margin-right:2px">${fmt(x.a)}</span><button data-edit="${x.id}">${IC.edit}</button><button data-del="${x.id}">${IC.trash}</button></div></div>`).join('');
 
   let modals='';
   if(S.confirmSettle)modals+=`<div class="modal-bg" id="modalBg"><div class="card" style="max-width:340px;width:100%;padding:22px" onclick="event.stopPropagation()"><h3 style="font-size:17px;font-weight:700;margin-bottom:10px">Solder les comptes ?</h3><p style="font-size:13px;color:var(--ts);margin-bottom:6px"><b style="color:var(--t)">${esc(S.names[deb])}</b> paie <b style="color:var(--ac)">${fmt(ab)}</b> à <b style="color:var(--t)">${esc(S.names[cred])}</b></p><p style="font-size:12px;color:var(--tm);margin-bottom:20px">Les compteurs reviennent à zéro.<br>Les dépenses restent dans l'historique.</p><div style="display:flex;gap:10px"><button class="btn-g" style="flex:1" id="cancelSettle">Annuler</button><button class="btn-p" style="flex:1;background:var(--ok)" id="doSettle">Confirmer</button></div></div></div>`;
@@ -506,8 +554,8 @@ function bind(){
 
   // ── Sync panel ──
   clk('shareBtn',()=>{S.showSync=true;S.syncView='menu';render()});
-  clk('syncClose',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
-  clk('syncBg',()=>{stopScan();S.showSync=false;S.syncView=null;render()});
+  clk('syncClose',()=>{closeModal('#syncBg',()=>{stopScan();S.showSync=false;S.syncView=null;render()})});
+  clk('syncBg',()=>{closeModal('#syncBg',()=>{stopScan();S.showSync=false;S.syncView=null;render()})});
   clk('syncBackMenu',()=>{stopScan();S.syncView='menu';render()});
   clk('syncOptQR',()=>{S.syncView='qr';render();setTimeout(generateQR,50)});
   clk('syncOptScan',()=>{S.syncView='scan';render();setTimeout(initCamera,100)});
@@ -515,7 +563,7 @@ function bind(){
 
   // ── Sync accept/reject ──
   clk('syncYes',()=>{if(!S.pendingSync)return;const m=mergeData({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements},S.pendingSync);S.names=m.n;S.ratio=m.r;S.expenses=m.e;S.settlements=m.s;S.pendingSync=null;persist();flash('Synchronisé ✓','ok')});
-  clk('syncNo',()=>{S.pendingSync=null;render()});
+  clk('syncNo',()=>{closeModal('.modal-bg',()=>{S.pendingSync=null;render()})});
 
   // ── Identity buttons (who am I) ──
   document.querySelectorAll('[data-me]').forEach(b=>b.addEventListener('click',()=>{S.me=parseInt(b.dataset.me);S.fPayer=S.me;render()}));
@@ -535,14 +583,14 @@ function bind(){
   // ── Edit / Delete ──
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const x=S.expenses.find(ex=>ex.id===b.dataset.edit);if(x){S.fLabel=x.l;S.fAmt=String(x.a);S.fDate=x.dt;S.fPayer=x.p;S.editId=x.id;S.view='add';render()}}));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();S.confirmDel=b.dataset.del;render()}));
-  clk('cancelDel',()=>{S.confirmDel=null;render()});
+  clk('cancelDel',()=>{closeModal('#delBg',()=>{S.confirmDel=null;render()})});
   clk('doDel',()=>{S.expenses=S.expenses.filter(e=>e.id!==S.confirmDel);S.confirmDel=null;persist();flash('Supprimée','')});
-  clk('delBg',()=>{S.confirmDel=null;render()});
+  clk('delBg',()=>{closeModal('#delBg',()=>{S.confirmDel=null;render()})});
 
   // ── Settle ──
   clk('settleBtn',()=>{S.confirmSettle=true;render()});
-  clk('cancelSettle',()=>{S.confirmSettle=false;render()});
-  clk('modalBg',()=>{S.confirmSettle=false;render()});
+  clk('cancelSettle',()=>{closeModal('#modalBg',()=>{S.confirmSettle=false;render()})});
+  clk('modalBg',()=>{closeModal('#modalBg',()=>{S.confirmSettle=false;render()})});
   clk('doSettle',()=>{const{u,b}=calcBal();if(b===0)return;S.settlements.push({id:uid(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});S.confirmSettle=false;persist();flash('Soldé ✓','ok')});
 
   // ── History ──
@@ -550,6 +598,7 @@ function bind(){
 }
 
 function clk(id,fn){const el=$(id);if(el)el.addEventListener('click',fn)}
+function closeModal(selector,cb){const bg=document.querySelector(selector);if(!bg){cb();return}bg.classList.add('closing');setTimeout(cb,180)}
 function microLabels(){const a=$('rn0'),b=$('rn1');if(a)a.textContent=S.names[0]||'Pers. 1';if(b)b.textContent=S.names[1]||'Pers. 2'}
 function microRatio(v){const a=$('r0'),b=$('r1');if(a)a.textContent=v+'%';if(b)b.textContent=(100-v)+'%'}
 function microSplit(){const el=$('splitP');if(!el)return;const pa=parseFloat((S.fAmt||'0').replace(',','.'))||0;if(pa>0)el.innerHTML=`<span>${esc(S.names[0])}: ${fmt(pa*S.ratio[0]/100)}</span><span>${esc(S.names[1])}: ${fmt(pa*S.ratio[1]/100)}</span>`}
