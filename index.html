@@ -178,7 +178,8 @@ async function shareLink(){
   const{encoded,warning,tooLarge}=packData(available);
   if(tooLarge){flash('Trop de données — soldez d\'abord','no');return}
   const url=baseUrl+encoded;
-  if(navigator.share){try{await navigator.share({title:'DuoSplit — '+S.names[0]+' & '+S.names[1],text:'Synchronise nos dépenses :',url});flash('Partagé ✓','ok')}catch(e){if(e.name!=='AbortError')copyUrl(url)}}
+  const other=S.names[1-S.me];
+  if(navigator.share){try{await navigator.share({title:'DuoSplit — '+S.names[0]+' & '+S.names[1],text:other+', synchronise nos dépenses :',url});flash('Partagé ✓','ok')}catch(e){if(e.name!=='AbortError')copyUrl(url)}}
   else copyUrl(url);
 }
 function copyUrl(u){navigator.clipboard.writeText(u).then(()=>flash('Lien copié ✓','ok')).catch(()=>flash('Erreur','no'))}
@@ -498,15 +499,15 @@ function renderSyncPanel(){
       <div class="sync-choice">
         <div class="sync-opt ${qrOk?'':'disabled'}" id="syncOptQR" style="${qrOk?'':'opacity:.4;pointer-events:none'}">
           <div class="ico" style="background:var(--acs);color:var(--ac)">${IC.qr}</div>
-          <div><h4>Afficher mon QR code</h4><p>${qrOk?'L\'autre téléphone scanne votre écran':'Trop de données — soldez d\'abord'}${qrWarn}</p></div>
+          <div><h4>Afficher mon QR code</h4><p>${qrOk?`${esc(S.names[1-S.me])} scanne votre écran`:'Trop de données — soldez d\'abord'}${qrWarn}</p></div>
         </div>
         <div class="sync-opt" id="syncOptScan">
           <div class="ico" style="background:rgba(45,212,160,.12);color:var(--ok)">${IC.cam}</div>
-          <div><h4>Scanner un QR code</h4><p>Ouvrir la caméra pour lire le code</p></div>
+          <div><h4>Scanner le QR de ${esc(S.names[1-S.me])}</h4><p>Ouvrir la caméra pour lire le code</p></div>
         </div>
         <div class="sync-opt ${urlOk?'':'disabled'}" id="syncOptLink" style="${urlOk?'':'opacity:.4;pointer-events:none'}">
           <div class="ico" style="background:rgba(248,113,113,.12);color:var(--no)">${IC.link}</div>
-          <div><h4>Partager un lien</h4><p>${urlOk?'Envoyer par SMS, WhatsApp, email…':'Trop de données — soldez d\'abord'}${urlWarn}</p></div>
+          <div><h4>Envoyer à ${esc(S.names[1-S.me])}</h4><p>${urlOk?'Par SMS, WhatsApp, email…':'Trop de données — soldez d\'abord'}${urlWarn}</p></div>
         </div>
       </div>
       <button class="btn-g" style="width:100%;margin-top:14px" id="syncClose">Fermer</button>
