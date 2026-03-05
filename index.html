@@ -36,7 +36,8 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 .btn-p[disabled]{opacity:.35;pointer-events:none;transform:none}
 .hdr-btn{background:var(--sf);border:1px solid var(--bd);border-radius:9px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out)}
 .hdr-btn:active{transform:scale(.9)}
-.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;animation:aSpringIn 450ms var(--ease-spring) both 150ms;transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) var(--ease-out)}
+.fab{position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),var(--acl));border:none;box-shadow:0 6px 28px rgba(124,107,240,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur-fast) var(--ease-out)}
+.fab.anim-in{animation:aSpringIn 450ms var(--ease-spring) both 150ms}
 .fab:active{transform:translateX(-50%) scale(.9);box-shadow:0 2px 12px rgba(124,107,240,.25)}
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:9px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 6px 28px rgba(124,107,240,.35);animation:aTIn 400ms var(--ease-spring) both;white-space:nowrap}
 .toast.out{animation:aTOut 250ms var(--ease-smooth) both}
@@ -365,6 +366,7 @@ function applyRender(html,animate){
   $('app').innerHTML=html;bind();
   if(animate){
     const vc=$('viewContent');if(vc)vc.classList.add('anim-in');
+    const fab=document.querySelector('.fab');if(fab)fab.classList.add('anim-in');
     document.querySelectorAll('#viewContent .exp-row.card').forEach((c,i)=>{c.classList.add('anim-in');c.style.animationDelay=Math.min(i*30,300)+'ms'});
     document.querySelectorAll('#viewContent .card:not(.exp-row)').forEach((c,i)=>{c.style.animationDelay=Math.min(i*40,200)+'ms'});
   }
