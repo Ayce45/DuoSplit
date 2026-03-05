@@ -93,6 +93,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 </style>
 </head>
 <body>
+<div id="toast-container"></div>
 <div id="app" class="app"></div>
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -320,7 +321,8 @@ function calcBal(){
 }
 
 // ─── Toast ─────────────────────────────────────────────────────
-let _tt;function flash(msg,type=''){S.toast=msg;S.toastType=type;render();clearTimeout(_tt);_tt=setTimeout(()=>{const t=document.querySelector('.toast');if(t){t.classList.add('out');setTimeout(()=>{S.toast=null;render()},260)}else{S.toast=null;render()}},2200)}
+let _tt;function renderToast(){const c=$('toast-container');if(!c)return;c.innerHTML=S.toast?`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`:''}
+function flash(msg,type=''){S.toast=msg;S.toastType=type;renderToast();clearTimeout(_tt);_tt=setTimeout(()=>{const t=document.querySelector('.toast');if(t){t.classList.add('out');setTimeout(()=>{S.toast=null;renderToast()},260)}else{S.toast=null;renderToast()}},2200)}
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
@@ -338,7 +340,6 @@ function renderModals(){
 function render(){
   const gen=++_renderGen;
   let overlay='';
-  if(S.toast)overlay+=`<div class="toast ${S.toastType}">${esc(S.toast)}</div>`;
   if(S.pendingSync&&S.view==='main')overlay+=renderSyncModal();
   if(S.showSync)overlay+=renderSyncPanel();
   overlay+=renderModals();
@@ -558,11 +559,11 @@ function bind(){
       microBtns();
     });
   });
-  clk('goMain',()=>{if(S.names[0].trim()&&S.names[1].trim()){S.view='main';persist();flash("C'est parti !",'ok')}});
+  clk('goMain',()=>{if(S.names[0].trim()&&S.names[1].trim()){S.view='main';persist();render();flash("C'est parti !",'ok')}});
   clk('back',()=>{stopScan();S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.expandedS=null;S.view='main';render()});
   clk('goHist',()=>{S.view='history';render()});
   clk('goSett',()=>{S.view='settings';render()});
-  clk('saveSett',()=>{if(S.names[0].trim()&&S.names[1].trim()){persist();S.view='main';flash('Sauvegardé ✓','ok')}});
+  clk('saveSett',()=>{if(S.names[0].trim()&&S.names[1].trim()){persist();S.view='main';render();flash('Sauvegardé ✓','ok')}});
   clk('addBtn',()=>{S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.view='add';render()});
 
   // ── Sync panel ──
@@ -575,7 +576,7 @@ function bind(){
   clk('syncOptLink',()=>{S.showSync=false;S.syncView=null;render();shareLink()});
 
   // ── Sync accept/reject ──
-  clk('syncYes',()=>{if(!S.pendingSync)return;const m=mergeData({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements},S.pendingSync);S.names=m.n;S.ratio=m.r;S.expenses=m.e;S.settlements=m.s;S.pendingSync=null;persist();flash('Synchronisé ✓','ok')});
+  clk('syncYes',()=>{if(!S.pendingSync)return;const m=mergeData({n:S.names,r:S.ratio,e:S.expenses,s:S.settlements},S.pendingSync);S.names=m.n;S.ratio=m.r;S.expenses=m.e;S.settlements=m.s;S.pendingSync=null;persist();render();flash('Synchronisé ✓','ok')});
   clk('syncNo',()=>{closeModal('.modal-bg',()=>{S.pendingSync=null;render()})});
 
   // ── Identity buttons (who am I) ──
@@ -590,21 +591,21 @@ function bind(){
     if(S.editId)S.expenses=S.expenses.map(e=>e.id===S.editId?{...e,l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer}:e);
     else S.expenses.push({id:uid(),l:S.fLabel.trim(),a,dt:S.fDate,p:S.fPayer,ca:new Date().toISOString()});
     const msg=S.editId?'Modifiée ✓':'Ajoutée ✓';
-    S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.view='main';persist();flash(msg,'ok');
+    S.fLabel='';S.fAmt='';S.fDate=today();S.fPayer=S.me;S.editId=null;S.view='main';persist();render();flash(msg,'ok');
   });
 
   // ── Edit / Delete ──
   document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const x=S.expenses.find(ex=>ex.id===b.dataset.edit);if(x){S.fLabel=x.l;S.fAmt=String(x.a);S.fDate=x.dt;S.fPayer=x.p;S.editId=x.id;S.view='add';render()}}));
   document.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();S.confirmDel=b.dataset.del;render()}));
   clk('cancelDel',()=>{closeModal('#delBg',()=>{S.confirmDel=null;render()})});
-  clk('doDel',()=>{S.expenses=S.expenses.filter(e=>e.id!==S.confirmDel);S.confirmDel=null;persist();flash('Supprimée','')});
+  clk('doDel',()=>{S.expenses=S.expenses.filter(e=>e.id!==S.confirmDel);S.confirmDel=null;persist();render();flash('Supprimée','')});
   clk('delBg',()=>{closeModal('#delBg',()=>{S.confirmDel=null;render()})});
 
   // ── Settle ──
   clk('settleBtn',()=>{S.confirmSettle=true;render()});
   clk('cancelSettle',()=>{closeModal('#modalBg',()=>{S.confirmSettle=false;render()})});
   clk('modalBg',()=>{closeModal('#modalBg',()=>{S.confirmSettle=false;render()})});
-  clk('doSettle',()=>{const{u,b}=calcBal();if(b===0)return;S.settlements.push({id:uid(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});S.confirmSettle=false;persist();flash('Soldé ✓','ok')});
+  clk('doSettle',()=>{const{u,b}=calcBal();if(b===0)return;S.settlements.push({id:uid(),d:new Date().toISOString(),a:Math.abs(b),f:b>0?1:0,t:b>0?0:1,ex:[...u]});S.confirmSettle=false;persist();render();flash('Soldé ✓','ok')});
 
   // ── History ──
   document.querySelectorAll('.stog').forEach(c=>c.addEventListener('click',()=>{S.expandedS=S.expandedS===c.dataset.id?null:c.dataset.id;render()}));
